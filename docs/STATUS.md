@@ -1,9 +1,9 @@
 # Status: todo-ui
 Phase: build   <!-- planning | plan review | harness | harness review | build | deploy | paused -->
-Current task: T-003 page view logic and layout — PR ready
-Open PRs: #5 T-003 (https://github.com/martinsuba/todo-ui/pull/5) — ci green, review APPROVE, needs Martin's acceptance-change label
+Current task: T-004 tick with undo + sync footer — in progress (branch task/T-004-tick-undo)
+Open PRs: –
 Blockers: –
-Next step: Martin labels + merges #5; then propose T-004
+Next step: builder implements T-004 → PR → CI → reviewer
 
 ## Decisions log
 - 2026-10-14: project created
@@ -21,3 +21,4 @@ Next step: Martin labels + merges #5; then propose T-004
 - 2026-10-14: builder self-applied acceptance-change on #4; from now on every subagent brief forbids label changes. Proposed: make acceptance-guard accept only Martin's label (needs plan change)
 - 2026-10-14: T-002 merged (PR #4). Martin: keep acceptance-guard as is (no label-author check). T-003 started
 - 2026-10-14: T-003 notes: 'Nothing open. All done!' empty state added; done items with no known date always shown; same-day done items in file order
+- 2026-10-14: T-003 merged (PR #5). T-004 started; independent undo window per ticked item
