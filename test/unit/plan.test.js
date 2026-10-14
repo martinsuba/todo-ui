@@ -17,12 +17,42 @@ describe("planOps", () => {
       [
         ["set", "todos/aaa1"],
         ["set", "todos/ccc3"],
+        ["set", "todos/ddd4"],
         ["set", "meta/sync"],
       ],
     );
     assert.ok(ops[0].data?.order < ops[1].data?.order);
     assert.equal(ops[1].data?.due, "2026-10-20");
-    assert.deepEqual(ops[2].data, { syncedAt: "2026-10-14T12:00:00.000Z" });
+    assert.equal(ops[2].data?.status, "done");
+    assert.deepEqual(ops[3].data, { syncedAt: "2026-10-14T12:00:00.000Z" });
     assert.equal(warnings.length, 1);
+  });
+
+  it("plans done items with doneAt and never archived items", () => {
+    const { items } = parseTodo(
+      "## Done\n- [x] Fix (done 2026-10-14) → [details](f.md) <!-- id:fx11 -->\n## Archive\n- [x] Old (done 2026-10-01) <!-- id:zz90 -->\n",
+    );
+    const { ops } = planOps(items, { now });
+    assert.deepEqual(
+      ops.map((o) => o.path),
+      ["todos/fx11", "meta/sync"],
+    );
+    assert.deepEqual(ops[0].data, {
+      title: "Fix",
+      due: null,
+      meta: "details: f.md",
+      status: "done",
+      doneAt: "2026-10-14",
+      order: 0,
+    });
+  });
+
+  it("warns on stderr hook when a due part stays in the title", () => {
+    const { items } = parseTodo("- [ ] Call (due 2026-11-01, call back) <!-- id:w001 -->\n");
+    const warnings = [];
+    planOps(items, { now, warn: (m) => warnings.push(m) });
+    assert.equal(warnings.length, 1);
+    assert.match(warnings[0], /Call/);
+    assert.match(warnings[0], /due 2026-11-01/);
   });
 });
