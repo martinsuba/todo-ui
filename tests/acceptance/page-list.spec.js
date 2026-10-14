@@ -43,7 +43,7 @@ test.describe("REQ-001 open list", () => {
     ]);
   });
 
-  pending(test, "T-001")("REQ-001: titles are listed", async ({ page }) => {
+  test("REQ-001: titles are listed", async ({ page }) => {
     await openPage(page, { seed: seedTodos([["aaa1", { title: "Plan weekend trip" }]]) });
     await expect(openItems(page)).toHaveCount(1);
     await expect(openItems(page).first().getByTestId("title")).toHaveText("Plan weekend trip");
@@ -217,7 +217,7 @@ test.describe("REQ-005 live state, freshness, empty and error states", () => {
     },
   );
 
-  pending(test, "T-001")("REQ-005: empty db shows the ask-HAL message", async ({ page }) => {
+  test("REQ-005: empty db shows the ask-HAL message", async ({ page }) => {
     await openPage(page, { seed: {} });
     await expect(page.getByText("No todos yet — ask HAL to sync todos")).toBeVisible();
     await expect(openItems(page)).toHaveCount(0);
