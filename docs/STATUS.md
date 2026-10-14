@@ -1,9 +1,9 @@
 # Status: todo-ui
 Phase: build   <!-- planning | plan review | harness | harness review | build | deploy | paused -->
-Current task: T-005 apply — PR ready
-Open PRs: #7 T-005 (https://github.com/martinsuba/todo-ui/pull/7) — review APPROVE after 2 fix rounds (round 1 fixed 2 blocking data-loss bugs), needs Martin's acceptance-change label
+Current task: T-006 HAL skill + preview — in progress (branch task/T-006-hal-skill)
+Open PRs: –
 Blockers: –
-Next step: Martin labels + merges #7; then propose T-006 (last M1 task), then M1 milestone review on Opus
+Next step: builder implements T-006 → PR → CI → reviewer (separate worktree)
 
 ## Decisions log
 - 2026-10-14: project created
@@ -26,3 +26,4 @@ Next step: Martin labels + merges #7; then propose T-006 (last M1 task), then M1
 - 2026-10-14: T-004 merged (PR #6). T-005 started; ticked-line format option A (keep due, add done group)
 - 2026-10-14: T-005 review found 2 blocking data-loss bugs (orphaned child lines, non-UTF-8 corruption) + duplicate ids, fences etc.; all fixed. Known limits documented in ARCHITECTURE (child block stops at blank line, UTF-8 only, ambiguous ids skipped, unclosed fence warning)
 - 2026-10-14: lesson: builder and reviewer shared one checkout; reviewer's detached checkout made the builder's push a silent no-op. From now on reviewers use a separate git worktree and builders verify the pushed SHA against origin
+- 2026-10-14: T-005 merged (PR #7). T-006 started incl. if_version pass-through and artifactdata batch format (ArtifactData requires if_version on writes to existing docs; batch ≤50)
