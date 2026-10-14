@@ -64,8 +64,9 @@ the ArtifactData tool, moving JSON between the CLI and the artifact's database. 
   the filename, either `{...fields, version}` or `{data:{...fields}, version}`. Unreadable files are skipped with a
   warning. The exact `list` output shape is verified against the real tool at deploy (the skill is fixed then if
   needed).
-- `rows.json`: `[{id, ...fields}]` (the skill converts ArtifactData `list` output to this; the CLI also accepts
-  `{docs:[{id,data}]}`). Exit code ≠ 0 with a message on parse errors; never writes a file it failed to parse.
+- `rows.json`: `[{id, ...fields}]` (the CLI also accepts `{docs:[{id,data}]}`); the HAL skill does not use it but
+  uses `--rows-dir`. Pages of a paginated `list` are saved into the same `$D/todos/` (unverified until deploy).
+  If `<dir>` exists but has no `todos/` (empty collection), the database is treated as empty with a stderr note. Exit code ≠ 0 with a message on parse errors; never writes a file it failed to parse.
 - `skipped` entries are `{id, reason}` (`id` is null when the row has none). Reasons: `not in file`, `already done`,
   `invalid row: not an object | bad id | bad tickedAt`. `plan` ignores invalid rows with a stderr warning.
 - `apply` writes via a temp file + rename and aborts (exit 1, no write) if the file changed since it was read.

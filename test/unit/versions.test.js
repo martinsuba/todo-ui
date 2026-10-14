@@ -107,7 +107,15 @@ describe("readRowsDir", () => {
     assert.equal(warnings.length, 2);
     assert.match(warnings[0], /ccc3\.json/);
   });
-  it("throws when todos/ is missing", () => {
-    assert.throws(() => readRowsDir(mkdtempSync(join(tmpdir(), "rows-"))), /cannot read/);
+  it("treats an existing dir without todos/ as empty, with a note; a missing dir throws", () => {
+    const { rows, warnings } = readRowsDir(mkdtempSync(join(tmpdir(), "rows-")));
+    assert.deepEqual(rows, []);
+    assert.match(warnings[0], /treating the database as empty/);
+    assert.throws(() => readRowsDir(join(tmpdir(), "does-not-exist-todo-sync")), /cannot read/);
+  });
+  it("a version-less row gives no if_version", () => {
+    const { items } = parseTodo("- [ ] A <!-- id:aaa1 -->\n");
+    const { batches } = toArtifactData(planOps(items, { now, rows: [{ id: "aaa1" }] }).ops);
+    assert.ok(!("if_version" in batches[0][0]));
   });
 });

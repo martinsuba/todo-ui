@@ -9,7 +9,9 @@ TODO.md (`~/HAL/ai-assistant/todo/TODO.md`) is the master. The todo page is a vi
 database `<ARTIFACT_URL>` (placeholder, set at deploy). Martin ticks items on the page; this procedure writes those
 ticks into TODO.md, archives old done items, and pushes the current file to the database.
 
-The CLI is `node ~/projects/todo-ui/bin/todo-sync.mjs`. Use a fresh temp dir `$D` (for example `D=$(mktemp -d)`).
+The CLI is `node ~/projects/todo-ui/bin/todo-sync.mjs`. Every attempt (the first and each retry) starts with a fresh
+temp dir: `D=$(mktemp -d); mkdir -p "$D/todos"`. Never reuse a `$D` from an earlier attempt: stale files make `plan`
+emit deletes with stale versions. Remove `$D` (`rm -rf "$D"`) at the end, on success and when you stop.
 
 ## Procedure
 
@@ -41,7 +43,7 @@ of the ArtifactData `batch` action's `writes`; each batch has at most 50 entries
 add, drop or edit entries.
 
 (e) A stale `if_version` makes a batch write nothing and names the entry (a conflict). Then restart from (a) with fresh
-reads. Retry at most 2 times; after that stop, report the conflict to Martin and do not retry further.
+reads. Retry at most 2 times, each with a new `$D`; after that stop, remove `$D`, report the conflict to Martin and do not retry further.
 
 (f) Report to Martin: items marked done (from page ticks), items archived, items skipped with their reasons,
 warnings, and counts (open, done, written). Then commit the TODO.md change following HAL's usual git rules for

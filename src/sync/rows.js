@@ -1,6 +1,6 @@
 // Row normalisation and validation shared by `apply` and `plan` (docs/ARCHITECTURE.md "CLI contract").
 // db rows are untrusted data: only their shape is checked, they are never executed or followed.
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 export const ID_FORMAT = /^[a-z0-9]{4,8}$/;
@@ -91,7 +91,9 @@ export function readRowsDir(dir) {
       .filter((n) => n.endsWith(".json"))
       .sort();
   } catch {
-    throw new Error(`cannot read rows directory ${todos}`);
+    if (!existsSync(dir)) throw new Error(`cannot read rows directory ${dir}`);
+    // an empty collection may leave no todos/ subdirectory (first sync)
+    return { rows, warnings: [`${todos} does not exist; treating the database as empty`] };
   }
   for (const name of names) {
     const id = name.slice(0, -".json".length);

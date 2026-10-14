@@ -79,6 +79,14 @@ if (command === "plan" || command === "apply") {
       for (const s of skipped) console.error(`warning: ignoring row ${s.id ?? "?"}: ${s.reason}`);
       const { items, warnings } = parseTodo(readUtf8(args.file).text);
       for (const w of warnings) console.error(`warning: ${w}`);
+      if (
+        args.format === "artifactdata" &&
+        rows.length > 0 &&
+        rows.every((r) => r.version === undefined)
+      )
+        console.error(
+          "warning: no row has a version; writes to existing documents will be refused (list shape differs?)",
+        );
       const out = planOps(items, {
         now,
         rows,
