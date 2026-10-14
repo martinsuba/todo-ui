@@ -1,9 +1,9 @@
 # Status: todo-ui
 Phase: build   <!-- planning | plan review | harness | harness review | build | deploy | paused -->
-Current task: T-006 HAL skill + preview — PR ready (last M1 task)
-Open PRs: #8 T-006 (https://github.com/martinsuba/todo-ui/pull/8) — review: 2 blocking fixed in round 1, verified; needs Martin's acceptance-change label
+Current task: – (M1 complete: T-001…T-006 merged)
+Open PRs: chore/status-T-006 (this status update)
 Blockers: –
-Next step: Martin labels + merges #8 → M1 complete → milestone review on Opus → deploy (DEPLOY.md)
+Next step: milestone review of M1 on Opus (Martin's go) → deploy (DEPLOY.md), each deploy step gated by Martin
 
 ## Decisions log
 - 2026-10-14: project created
@@ -28,3 +28,4 @@ Next step: Martin labels + merges #8 → M1 complete → milestone review on Opu
 - 2026-10-14: lesson: builder and reviewer shared one checkout; reviewer's detached checkout made the builder's push a silent no-op. From now on reviewers use a separate git worktree and builders verify the pushed SHA against origin
 - 2026-10-14: T-005 merged (PR #7). T-006 started incl. if_version pass-through and artifactdata batch format (ArtifactData requires if_version on writes to existing docs; batch ≤50)
 - 2026-10-14: T-006 review fixes: empty-db first sync tolerated, fresh temp dir per sync attempt. Open until deploy: real ArtifactData list shape (skill stops if rows lack `version`)
+- 2026-10-14: T-006 merged (PR #8). M1 complete; all acceptance tests run, none skipped
