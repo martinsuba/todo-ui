@@ -13,7 +13,7 @@ Acceptance test files (planned names; test-architect may adjust and record in TE
 
 ## M1: MVP — view TODO.md on the phone and tick items done
 
-### [ ] T-001: Thin end-to-end slice  (size M)
+### [x] T-001: Thin end-to-end slice  (size M)
 - Goal: a TODO.md with plain open items flows file → `todo-sync plan` ops → (fake) db → page list.
 - REQs: REQ-001 (titles only, file order), REQ-008 (set ops for new items + meta/sync), REQ-005 (empty state)
 - Acceptance tests to make pass: the REQ-001 "titles listed" and REQ-005 "empty state" cases; REQ-008 "new item →
@@ -23,9 +23,10 @@ Acceptance test files (planned names; test-architect may adjust and record in TE
 - Definition of done: code + unit tests, listed acceptance tests pass, CI green, review clean, docs updated if needed
 - Notes: XSS-safe rendering (textContent) from the start.
 
-### [ ] T-002: Full TODO.md parser and byte-exact writer  (size M)
-- Goal: parse due/done/meta/links/sections exactly as PRD describes; write back unchanged files byte-identically.
-- REQs: REQ-007
+### [~] T-002: Full TODO.md parser and byte-exact writer  (size M)
+- Goal: parse due/done/meta/links/sections exactly as PRD describes; write back unchanged files byte-identically;
+  `plan` also emits set ops for DONE items (`status:"done"`, `doneAt`), never for archived items.
+- REQs: REQ-007, REQ-008 (done items)
 - Acceptance tests to make pass: `cli-parse.test.js` (the parse-via-`plan` case)
 - Areas/files: `src/sync/parse.js`, `src/sync/write.js`, `test/fixtures/*.md` (synthetic, include diacritics,
   nested parentheses, `remind`, `→ [details](…)`, CRLF-free and trailing-newline variants, missing sections).

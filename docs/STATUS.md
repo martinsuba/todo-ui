@@ -1,9 +1,9 @@
 # Status: todo-ui
 Phase: build   <!-- planning | plan review | harness | harness review | build | deploy | paused -->
-Current task: T-001 thin end-to-end slice — PR ready
-Open PRs: #3 T-001 (https://github.com/martinsuba/todo-ui/pull/3) — ci green, review APPROVE, needs label acceptance-change
+Current task: T-002 full parser + byte-exact writer — in progress (branch task/T-002-parser)
+Open PRs: –
 Blockers: –
-Next step: Martin labels + merges #3; then propose T-002
+Next step: builder implements T-002 → PR → CI → reviewer
 
 ## Decisions log
 - 2026-10-14: project created
@@ -17,3 +17,4 @@ Next step: Martin labels + merges #3; then propose T-002
 - 2026-10-14: T-001 review notes for later tasks: PLAN gap — no task explicitly plans set ops for DONE items
   (needed by REQ-008 and T-003 Done section) → propose adding to T-002 when proposing it; T-003 must cover the
   null-db AND snapshot-error paths (app.js currently swallows errors) and move sorting into view.js.
+- 2026-10-14: T-001 merged (PR #3). T-002 approved incl. done-item set ops in plan (fills PLAN gap)
