@@ -12,6 +12,7 @@
  * @property {"open"|"done"} status
  * @property {string|null} section name of the enclosing `## ` section, or null
  * @property {number} order index among all items in file order
+ * @property {string[]} warnings problems found while parsing (e.g. a due date left in the title)
  */
 
 const ITEM_RE = /^- \[([ xX])\] (.*)$/;
@@ -21,6 +22,12 @@ const LINK_RE = /\s*→\s*\[[^\]]*\]\(([^()\s]*)\)\s*$/;
 const GROUP_RE = /\s*\(([^()]*)\)\s*$/;
 const KEY_RE = /^(due|done|remind)(\s|$)/;
 const DATE_RE = /^(due|done) (\d{4}-\d{2}-\d{2})$/;
+
+/** @param {string} d YYYY-MM-DD that is a real calendar date */
+function isRealDate(d) {
+  const t = new Date(`${d}T00:00:00Z`);
+  return !Number.isNaN(t.getTime()) && t.toISOString().slice(0, 10) === d;
+}
 
 /**
  * Splits one line's text (after the checkbox) into its parts.
@@ -48,16 +55,24 @@ function parseItemText(text) {
   let doneAt = null;
   /** @type {string[]} */
   const metaGroups = [];
+  /** @type {string[]} */
+  const warnings = [];
   for (;;) {
     const gm = GROUP_RE.exec(rest);
     if (!gm) break;
     const parts = gm[1].split(",").map((p) => p.trim());
-    if (!parts.every((p) => KEY_RE.test(p))) break;
+    if (!parts.every((p) => KEY_RE.test(p))) {
+      if (parts.some((p) => /^(due|done)\s/.test(p))) {
+        warnings.push(`"(${gm[1]})" contains due/done but stays in the title`);
+      }
+      break;
+    }
     /** @type {string[]} */
     const extra = [];
     for (const p of parts) {
       const dm = DATE_RE.exec(p);
-      if (dm && dm[1] === "due" && due === null) due = dm[2];
+      if (dm && !isRealDate(dm[2])) extra.push(p);
+      else if (dm && dm[1] === "due" && due === null) due = dm[2];
       else if (dm && dm[1] === "done" && doneAt === null) doneAt = dm[2];
       else extra.push(p);
     }
@@ -72,6 +87,7 @@ function parseItemText(text) {
     due,
     doneAt,
     meta: metaParts.length ? metaParts.join(" · ") : null,
+    warnings,
   };
 }
 

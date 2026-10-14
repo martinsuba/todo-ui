@@ -11,6 +11,7 @@ export function planOps(items, { now, warn = () => {} }) {
   /** @type {{op: "set"|"update"|"delete", path: string, data?: Record<string, any>}[]} */
   const ops = [];
   items.forEach((item) => {
+    for (const w of item.warnings) warn(`${item.title}: ${w}`);
     if (item.section?.toLowerCase() === "archive") return;
     if (!item.id) {
       warn(`skipping item without id (run apply first): ${item.title}`);

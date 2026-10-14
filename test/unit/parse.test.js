@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { describe, it } from "node:test";
 import { parseTodo } from "../../src/sync/parse.js";
 import { serialize } from "../../src/sync/write.js";
@@ -23,6 +23,7 @@ describe("parseTodo", () => {
         status: "open",
         section: "Open",
         order: 0,
+        warnings: [],
       },
       {
         line: 4,
@@ -34,6 +35,7 @@ describe("parseTodo", () => {
         status: "open",
         section: "Open",
         order: 1,
+        warnings: [],
       },
       {
         line: 7,
@@ -45,6 +47,7 @@ describe("parseTodo", () => {
         status: "done",
         section: "Done",
         order: 2,
+        warnings: [],
       },
     ]);
   });
@@ -78,19 +81,39 @@ describe("parseTodo", () => {
     assert.equal(b.title, "B (balík, list)");
   });
 
-  for (const f of [
-    "todo-ids.md",
-    "todo-edge.md",
-    "todo-open-only.md",
-    "todo-noids.md",
-    "todo-no-trailing-newline.md",
-    "todo-no-sections-end.md",
-  ]) {
+  for (const f of readdirSync(new URL("../fixtures/", import.meta.url))) {
     it(`parse then serialize is byte-identical (${f})`, () => {
       const text = fixture(f);
       assert.equal(serialize(parseTodo(text).lines), text);
     });
   }
+
+  it("round-trips CRLF with no trailing newline", () => {
+    const text = "## Open\r\n- [ ] A\r\n- [ ] B";
+    assert.equal(serialize(parseTodo(text).lines), text);
+  });
+
+  it("treats impossible dates as meta, not due/done", () => {
+    const items = parseTodo(
+      "- [ ] A (due 2026-13-45)\n- [ ] B (due 2026-02-30, remind 1:00)\n- [x] C (done 2026-00-10)\n- [ ] D (due 2028-02-29)\n",
+    ).items;
+    assert.deepEqual(
+      items.map((i) => [i.title, i.due, i.doneAt, i.meta]),
+      [
+        ["A", null, null, "due 2026-13-45"],
+        ["B", null, null, "due 2026-02-30 · remind 1:00"],
+        ["C", null, null, "done 2026-00-10"],
+        ["D", "2028-02-29", null, null],
+      ],
+    );
+  });
+
+  it("warns when a due/done part is left in the title", () => {
+    const [it1] = parseTodo("- [ ] Call (due 2026-11-01, call back) <!-- id:w001 -->\n").items;
+    assert.equal(it1.title, "Call (due 2026-11-01, call back)");
+    assert.equal(it1.due, null);
+    assert.equal(it1.warnings.length, 1);
+  });
 
   it("round-trips CRLF files", () => {
     const text = "## Open\r\n- [ ] A\r\n";

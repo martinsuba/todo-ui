@@ -46,4 +46,13 @@ describe("planOps", () => {
       order: 0,
     });
   });
+
+  it("warns on stderr hook when a due part stays in the title", () => {
+    const { items } = parseTodo("- [ ] Call (due 2026-11-01, call back) <!-- id:w001 -->\n");
+    const warnings = [];
+    planOps(items, { now, warn: (m) => warnings.push(m) });
+    assert.equal(warnings.length, 1);
+    assert.match(warnings[0], /Call/);
+    assert.match(warnings[0], /due 2026-11-01/);
+  });
 });
