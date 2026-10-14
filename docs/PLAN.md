@@ -54,7 +54,7 @@ Acceptance test files (planned names; test-architect may adjust and record in TE
 - Notes: one write per tick; no write from snapshot callbacks. Several ticks in a row: each item has its own
   independent 4 s undo window.
 
-### [~] T-005: `apply` — ticks into TODO.md, archive, ids  (size M)
+### [x] T-005: `apply` — ticks into TODO.md, archive, ids  (size M)
 - Goal: implement `todo-sync apply` (and `--dry-run`) per PRD; `plan` updates existing docs without `tickedAt`,
   deletes docs not in Open/Done.
 - REQs: REQ-009, REQ-008 (update/delete cases)
@@ -67,10 +67,13 @@ Acceptance test files (planned names; test-architect may adjust and record in TE
   (Martin, option A): keep existing metadata, insert ` (done YYYY-MM-DD)` after the last metadata group, before
   `→ [link]` and the id comment. Done items without a done date are never archived. Done date = local date (TZ).
 
-### [ ] T-006: HAL skill and preview  (size S)
+### [~] T-006: HAL skill and preview  (size M)
 - Goal: `todo-sync preview`; `hal/skills/todo-sync/SKILL.md` with the exact procedure, ArtifactData list → rows.json
   and ops → batch mapping, consent rules (D-003), "keep the id comment when editing a line", untrusted-data rule;
-  README section on running a sync.
+  README section on running a sync. Additions (Martin, 2026-10-14): `plan` carries each row's `version` as
+  `if_version` on update/delete ops; `plan --format artifactdata` prints ready ArtifactData batch `writes`
+  (`{op, collection, doc_id, data, if_version}`), chunked to ≤50 per batch; skill retries a sync at most 2× on a
+  version conflict.
 - REQs: REQ-010
 - Acceptance tests to make pass: `cli-preview.test.js`
 - Areas/files: `bin/todo-sync.mjs`, `hal/skills/todo-sync/SKILL.md`, `README.md`.
