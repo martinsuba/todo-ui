@@ -1,5 +1,5 @@
 // Inlines src/page/styles.css and the page JS modules into src/page/index.html -> dist/todo.html.
-// Modules are concatenated into one classic script: `import` lines are dropped and `export ` removed,
+// Modules are concatenated into one classic script: `import` statements (also multi-line) are dropped and `export ` removed,
 // so page modules share one scope and must not reuse top-level names.
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -12,7 +12,7 @@ const read = (name) => readFileSync(join(page, name), "utf8");
 const MODULES = ["view.js", "db.js", "app.js"];
 const js = MODULES.map((m) =>
   read(m)
-    .replace(/^import .*$/gm, "")
+    .replace(/^import [^;]*;[ \t]*$/gm, "")
     .replace(/^export (default )?/gm, ""),
 ).join("\n");
 

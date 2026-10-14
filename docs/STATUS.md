@@ -3,7 +3,7 @@ Phase: build   <!-- planning | plan review | harness | harness review | build | 
 Current task: T-004 tick with undo + sync footer — in progress (branch task/T-004-tick-undo)
 Open PRs: –
 Blockers: –
-Next step: builder implements T-004 → PR → CI → reviewer
+Next step: PR ready → CI → reviewer
 
 ## Decisions log
 - 2026-10-14: project created

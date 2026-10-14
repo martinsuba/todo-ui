@@ -1,5 +1,4 @@
 // Pure view logic (sorting, overdue / due-today, done window). No DOM, no clock: "today" is injected.
-// "Synced X ago" comes in T-004.
 
 /** Days a done item stays visible. */
 export const DONE_WINDOW_DAYS = 7;
@@ -112,4 +111,22 @@ export function doneWindow(rows, today) {
       return orderOf(a.row) - orderOf(b.row);
     })
     .map((x) => x.row);
+}
+
+/**
+ * "Synced 5 min ago" / "2 h ago" / "3 d ago" for an ISO timestamp, or null if it is not a valid date.
+ * @param {unknown} syncedAt
+ * @param {number} nowMs epoch milliseconds
+ * @returns {string|null}
+ */
+export function formatSynced(syncedAt, nowMs) {
+  if (typeof syncedAt !== "string") return null;
+  const t = Date.parse(syncedAt);
+  if (Number.isNaN(t)) return null;
+  const minutes = Math.floor(Math.max(0, nowMs - t) / 60000);
+  if (minutes < 1) return "Synced just now";
+  if (minutes < 60) return `Synced ${minutes} min ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `Synced ${hours} h ago`;
+  return `Synced ${Math.floor(hours / 24)} d ago`;
 }

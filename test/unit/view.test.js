@@ -5,6 +5,7 @@ import {
   doneDate,
   doneWindow,
   dueState,
+  formatSynced,
   isDone,
   localDate,
   sortOpen,
@@ -82,4 +83,18 @@ test("doneWindow: newest first, hides items older than 7 days, keeps exactly 7",
     doneWindow(rows, "2026-10-14").map((r) => r.id),
     ["new", "edge", "nodate"],
   );
+});
+
+test("formatSynced: just now, minutes, hours, days, invalid", () => {
+  const now = Date.parse("2026-10-14T10:00:00Z");
+  const ago = (/** @type {number} */ ms) => new Date(now - ms).toISOString();
+  assert.equal(formatSynced(ago(30_000), now), "Synced just now");
+  assert.equal(formatSynced(ago(5 * 60_000), now), "Synced 5 min ago");
+  assert.equal(formatSynced(ago(59 * 60_000), now), "Synced 59 min ago");
+  assert.equal(formatSynced(ago(2 * 3600_000), now), "Synced 2 h ago");
+  assert.equal(formatSynced(ago(23.9 * 3600_000), now), "Synced 23 h ago");
+  assert.equal(formatSynced(ago(3 * 24 * 3600_000), now), "Synced 3 d ago");
+  assert.equal(formatSynced(ago(-60_000), now), "Synced just now");
+  assert.equal(formatSynced("garbage", now), null);
+  assert.equal(formatSynced(undefined, now), null);
 });
