@@ -1,0 +1,20 @@
+name: acceptance-guard
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+jobs:
+  acceptance-guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Block changes to acceptance tests and workflows without Martin's label
+        if: ${{ !contains(github.event.pull_request.labels.*.name, 'acceptance-change') }}
+        run: |
+          changed=$(git diff --name-only "origin/${{ github.base_ref }}...HEAD")
+          if echo "$changed" | grep -qE '^(tests/acceptance/|\.github/workflows/)'; then
+            echo "::error::This PR changes tests/acceptance/ or .github/workflows/. Martin must add the 'acceptance-change' label."
+            echo "$changed" | grep -E '^(tests/acceptance/|\.github/workflows/)'
+            exit 1
+          fi
