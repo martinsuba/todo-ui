@@ -24,10 +24,9 @@ Acceptance test files (planned names; test-architect may adjust and record in TE
 - Notes: XSS-safe rendering (textContent) from the start.
 
 ### [ ] T-002: Full TODO.md parser and byte-exact writer  (size M)
-- Goal: parse due/done/meta/links/sections exactly as PRD describes; write back unchanged files byte-identically;
-  assign ids to lines without one.
+- Goal: parse due/done/meta/links/sections exactly as PRD describes; write back unchanged files byte-identically.
 - REQs: REQ-007
-- Acceptance tests to make pass: `cli-parse.test.js` (all cases)
+- Acceptance tests to make pass: `cli-parse.test.js` (the parse-via-`plan` case)
 - Areas/files: `src/sync/parse.js`, `src/sync/write.js`, `test/fixtures/*.md` (synthetic, include diacritics,
   nested parentheses, `remind`, `→ [details](…)`, CRLF-free and trailing-newline variants, missing sections).
 - Definition of done: as T-001
@@ -57,7 +56,8 @@ Acceptance test files (planned names; test-architect may adjust and record in TE
 - Goal: implement `todo-sync apply` (and `--dry-run`) per PRD; `plan` updates existing docs without `tickedAt`,
   deletes docs not in Open/Done.
 - REQs: REQ-009, REQ-008 (update/delete cases)
-- Acceptance tests to make pass: `cli-apply.test.js`, `cli-plan.test.js`
+- Acceptance tests to make pass: `cli-apply.test.js`, `cli-plan.test.js`, and the `cli-parse.test.js` apply
+  cases (byte-identical no-op, id assignment, no second id)
 - Areas/files: `src/sync/apply.js`, `src/sync/plan.js`, `src/sync/write.js`, `bin/todo-sync.mjs`.
 - Definition of done: as T-001
 - Notes: validate rows (id format, types); unknown/invalid rows reported as skipped, never crash mid-write (write to a

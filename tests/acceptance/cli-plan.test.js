@@ -70,8 +70,9 @@ describe("REQ-008 plan: push file state to the artifact", () => {
     const file = copyFixture("todo-ids.md"); // zz90 is in ## Archive
     const ops = plan(file, [dbRow("zz90")]);
     const touched = ops.filter((o) => o.path === "todos/zz90");
-    assert.ok(
-      touched.every((o) => o.op === "delete"),
+    assert.deepEqual(
+      touched.map((o) => o.op),
+      ["delete"],
       JSON.stringify(touched),
     );
     assert.ok(

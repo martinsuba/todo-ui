@@ -10,6 +10,7 @@
 ## Done
 - [x] Renew library card (done 2026-10-13) <!-- id:p7q1 -->
 - [x] Objednať kávu (done 2026-10-12) <!-- id:cof2 -->
+- [x] Fix scanner (done 2026-10-14) → [details](scanner.md) <!-- id:fx11 -->
 
 ## Archive
 - [x] Something old (done 2026-10-01) <!-- id:zz90 -->

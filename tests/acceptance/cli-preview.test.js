@@ -42,8 +42,7 @@ describe("REQ-010 preview and HAL skill", () => {
       pending("T-006"),
       () => {
         const s = skill();
-        assert.match(s, /tick/i);
-        assert.match(s, /consent/i);
+        assert.match(s, /tick[^.\n]*consent/i);
         assert.match(s, /report/i);
       },
     );
@@ -53,9 +52,7 @@ describe("REQ-010 preview and HAL skill", () => {
       pending("T-006"),
       () => {
         const s = skill();
-        assert.match(s, /(add|edit)/i);
-        assert.match(s, /explicit/i);
-        assert.match(s, /\byes\b/i);
+        assert.match(s, /(add|edit)[^.\n]*explicit[^.\n]*\byes\b/i);
       },
     );
 

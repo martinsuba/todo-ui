@@ -18,7 +18,7 @@ All commands from the repo root. Node 24 (`.nvmrc`).
 Every acceptance case is skipped (CI is green) and names the task that implements it (`pending("T-00x")` /
 `pending(test, "T-00x")`). To un-skip, the task PR (which must carry the `acceptance-change` label) replaces
 `pending("T-00x")` by `{}` in `*.test.js`, and `pending(test, "T-00x")(` by `test(` in `*.spec.js`.
-To run all skipped cases now (expect failures until built): `RUN_PENDING=1 npm run test:acceptance`.
+To run all skipped cases now (expect failures until built): `RUN_PENDING=1 npm run test:acceptance` (for page runs add `-- --timeout=5000` so failures do not take 30 s each).
 
 ## Test support (not acceptance tests)
 - `test/fake-claude.js`: in-memory fake of `window.claude.use("db")` (doc/collection refs, get/set/update/delete,
@@ -31,6 +31,7 @@ To run all skipped cases now (expect failures until built): `RUN_PENDING=1 npm r
 - `test/cli-helpers.js`: runs the real CLI (TZ=UTC) on temp copies of `test/fixtures/*.md` (synthetic only).
 
 ## DOM contract for page tests (the builder must produce this markup)
+- All content renders inside `<main>`.
 - `[data-testid=open-list]` contains `[data-testid=todo-item]` (open items, in display order). Each item has
   `[data-testid=title]`, optional `[data-testid=due]`, `[data-testid=meta]` (plain text, under the title),
   `[data-testid=tick]` (button, >= 44x44 px), `data-due-state="overdue|today|none"`, and, when overdue/today, a
@@ -38,8 +39,8 @@ To run all skipped cases now (expect failures until built): `RUN_PENDING=1 npm r
 - `[data-testid=done-section]` is a `<details>` (closed by default) with `<summary>Done (n)</summary>` and
   `[data-testid=done-item]` children (each with `[data-testid=title]`, no buttons or checkboxes).
 - After a tick: the item leaves the open list at once, a button named "Undo" is shown for ~4 s, then one
-  `update({tickedAt})` on `todos/<id>`. A failed write puts the item back and shows an element with `role=alert`.
-- `[data-testid=sync-footer]` shows "Synced N h ago" from `meta/sync`.
+  `update({tickedAt})` on `todos/<id>`. A failed write puts the item back and shows an element with `role=alert` (error message for the rejected write).
+- `[data-testid=sync-footer]` shows "Synced N h ago" from `meta/sync`; it is hidden/absent when `meta/sync` does not exist.
 - Empty db: text "No todos yet — ask HAL to sync todos". `use("db")` null: text mentioning claude.ai and being
   signed in, and no `open-list`.
 
@@ -50,6 +51,7 @@ Status: all skipped (pending), none failing. "Un-skipped by" is the PLAN.md task
 |---|---|---|
 | REQ-001 | page-list.spec.js :: sorted by due, undated last | T-003 |
 | REQ-001 | page-list.spec.js :: ties keep file order | T-003 |
+| REQ-002 | page-list.spec.js :: due today uses local date (00:30 Bratislava) | T-003 |
 | REQ-001 | page-list.spec.js :: titles are listed | T-001 |
 | REQ-001 | page-list.spec.js :: due date shown for dated items | T-003 |
 | REQ-001 | page-list.spec.js :: HTML in a title shown literally | T-003 |
@@ -70,7 +72,7 @@ Status: all skipped (pending), none failing. "Un-skipped by" is the PLAN.md task
 | REQ-006 | page-layout.spec.js :: no horizontal scroll at 375x812 | T-003 |
 | REQ-006 | page-layout.spec.js :: tick targets >= 44x44 | T-003 |
 | REQ-006 | page-layout.spec.js :: dark / light / background changes (3 cases) | T-003 |
-| REQ-007 | cli-parse.test.js :: title, due, meta from real-format lines (via `plan`) | T-002 |
+| REQ-007 | cli-parse.test.js :: title, due, meta from real-format lines incl. done item with trailing link (via `plan`) | T-002 |
 | REQ-007 | cli-parse.test.js :: no-op write is byte-identical (3 fixtures, via `apply`) | T-005 (needs `apply`) |
 | REQ-007 | cli-parse.test.js :: ids assigned, nothing else changes | T-005 (needs `apply`) |
 | REQ-007 | cli-parse.test.js :: second apply adds no ids | T-005 |

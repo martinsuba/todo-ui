@@ -48,6 +48,11 @@ describe("REQ-007 parse and preserve TODO.md", () => {
     // done section
     assert.equal(set("p7q1").status, "done");
     assert.equal(set("p7q1").doneAt, "2026-10-13");
+    // done item with the link after the done date
+    assert.equal(set("fx11").title, "Fix scanner");
+    assert.equal(set("fx11").status, "done");
+    assert.equal(set("fx11").doneAt, "2026-10-14");
+    assert.equal(set("fx11").meta, "details: scanner.md");
     // order follows file order
     const orders = ["k3f9", "a81c", "x02m", "pr10", "ins7", "p7q1", "cof2"].map(
       (id) => set(id).order,

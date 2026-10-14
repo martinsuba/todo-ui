@@ -115,6 +115,21 @@ test.describe("REQ-002 overdue and due-today marks", () => {
     },
   );
 
+  pending(test, "T-003")(
+    "REQ-002: today is the viewer's local date (00:30 local is still the previous day in UTC)",
+    async ({ page }) => {
+      await openPage(page, {
+        now: new Date("2026-10-14T00:30:00+02:00"),
+        seed: seedTodos([
+          ["aaa1", { title: "Local today", due: "2026-10-14" }],
+          ["bbb2", { title: "Local yesterday", due: "2026-10-13" }],
+        ]),
+      });
+      await expect(mark(page, "Local today")).toHaveAttribute("data-due-state", "today");
+      await expect(mark(page, "Local yesterday")).toHaveAttribute("data-due-state", "overdue");
+    },
+  );
+
   pending(test, "T-003")("REQ-002: future or undated items have neither mark", async ({ page }) => {
     await openPage(page, {
       seed: seedTodos([
