@@ -56,3 +56,26 @@ describe("planOps", () => {
     assert.match(warnings[0], /due 2026-11-01/);
   });
 });
+
+describe("planOps with db rows", () => {
+  it("updates rows present, sets new, deletes rows not in Open/Done, never tickedAt", () => {
+    const { items } = parseTodo(
+      "## Open\n- [ ] A <!-- id:aaa1 -->\n- [ ] B <!-- id:bbb2 -->\n## Archive\n- [x] Z (done 2026-01-01) <!-- id:zzz9 -->\n",
+    );
+    const { ops } = planOps(items, {
+      now,
+      rows: [{ id: "bbb2", tickedAt: "2026-10-14T10:00:00Z" }, { id: "zzz9" }, { id: "gone" }],
+    });
+    assert.deepEqual(
+      ops.map((o) => [o.op, o.path]),
+      [
+        ["set", "todos/aaa1"],
+        ["update", "todos/bbb2"],
+        ["delete", "todos/zzz9"],
+        ["delete", "todos/gone"],
+        ["set", "meta/sync"],
+      ],
+    );
+    assert.ok(!("tickedAt" in (ops[1].data ?? {})));
+  });
+});

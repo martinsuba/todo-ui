@@ -55,6 +55,9 @@ the ArtifactData tool, moving JSON between the CLI and the artifact's database. 
   path:"todos/<id>"|"meta/sync", data?}]}`.
 - `rows.json`: `[{id, ...fields}]` (the skill converts ArtifactData `list` output to this; the CLI also accepts
   `{docs:[{id,data}]}`). Exit code ≠ 0 with a message on parse errors; never writes a file it failed to parse.
+- `skipped` entries are `{id, reason}` (`id` is null when the row has none). Reasons: `not in file`, `already done`,
+  `invalid row: not an object | bad id | bad tickedAt`. `plan` ignores invalid rows with a stderr warning.
+- `apply` writes via a temp file + rename and aborts (exit 1, no write) if the file changed since it was read.
 - `--now` defaults to the current time; dates use the local time zone (`TZ`, Europe/Bratislava on the VPS).
 - Id generation: 4 random base36 chars, unique within the file; injectable RNG for tests.
 

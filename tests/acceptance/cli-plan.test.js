@@ -1,7 +1,7 @@
 // REQ-008: `todo-sync plan` outputs the db operations that make the db match the file.
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { NOW, copyFixture, pending, runJson, writeRows } from "../../test/cli-helpers.js";
+import { NOW, copyFixture, runJson, writeRows } from "../../test/cli-helpers.js";
 
 const dbRow = (id, extra = {}) => ({
   id,
@@ -44,7 +44,7 @@ describe("REQ-008 plan: push file state to the artifact", () => {
 
   it(
     "REQ-008: file X,Y with db rows Y (ticked) and Z gives set X, update Y, delete Z, set meta/sync",
-    pending("T-005"),
+    {},
     () => {
       // X = x001 (new), Y = y002 (in db with tickedAt), Z = zzz9 (only in db)
       const file = copyFixture("todo-open-only.md");
@@ -66,7 +66,7 @@ describe("REQ-008 plan: push file state to the artifact", () => {
     },
   );
 
-  it("REQ-008: archived items are not set or updated", pending("T-005"), () => {
+  it("REQ-008: archived items are not set or updated", {}, () => {
     const file = copyFixture("todo-ids.md"); // zz90 is in ## Archive
     const ops = plan(file, [dbRow("zz90")]);
     const touched = ops.filter((o) => o.path === "todos/zz90");
@@ -81,7 +81,7 @@ describe("REQ-008 plan: push file state to the artifact", () => {
     );
   });
 
-  it("REQ-008: accepts rows as {docs:[{id,data}]} too", pending("T-005"), () => {
+  it("REQ-008: accepts rows as {docs:[{id,data}]} too", {}, () => {
     const file = copyFixture("todo-open-only.md");
     const rows = writeRows(file, {
       docs: [

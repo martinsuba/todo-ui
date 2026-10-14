@@ -3,7 +3,9 @@
 import { readFileSync } from "node:fs";
 import { parseArgs } from "node:util";
 import { parseTodo } from "../src/sync/parse.js";
+import { applyFile } from "../src/sync/apply.js";
 import { planOps } from "../src/sync/plan.js";
+import { validateRows } from "../src/sync/rows.js";
 
 const USAGE =
   "usage: todo-sync <preview|plan|apply> --file <TODO.md> [--rows <rows.json>] [--now <ISO>] [--dry-run]";
@@ -15,7 +17,7 @@ function fail(msg, code = 1) {
   process.exit(code);
 }
 
-if (command === "plan") {
+if (command === "plan" || command === "apply") {
   let args;
   try {
     args = parseArgs({
@@ -24,24 +26,38 @@ if (command === "plan") {
         file: { type: "string" },
         rows: { type: "string" },
         now: { type: "string" },
+        "dry-run": { type: "boolean" },
       },
+      allowPositionals: false,
     }).values;
   } catch (e) {
     fail(e instanceof Error ? e.message : String(e), 64);
   }
   if (!args.file) fail("--file is required", 64);
+  if (!args.rows) fail("--rows is required", 64);
+  if (args["dry-run"] && command !== "apply") fail("--dry-run is only valid for apply", 64);
   const now = args.now ? new Date(args.now) : new Date();
   if (Number.isNaN(now.getTime())) fail(`invalid --now: ${args.now}`, 64);
-  let text;
   try {
-    text = readFileSync(args.file, "utf8");
+    const raw = JSON.parse(readFileSync(args.rows, "utf8"));
+    if (command === "apply") {
+      const summary = applyFile(args.file, raw, { now, dryRun: Boolean(args["dry-run"]) });
+      console.log(JSON.stringify(summary, null, 2));
+    } else {
+      const { rows, skipped } = validateRows(raw);
+      for (const s of skipped) console.error(`warning: ignoring row ${s.id ?? "?"}: ${s.reason}`);
+      const { items } = parseTodo(readFileSync(args.file, "utf8"));
+      const out = planOps(items, {
+        now,
+        rows,
+        warn: (m) => console.error(`warning: ${m}`),
+      });
+      console.log(JSON.stringify(out, null, 2));
+    }
   } catch (e) {
     fail(e instanceof Error ? e.message : String(e));
   }
-  const { items } = parseTodo(text);
-  const out = planOps(items, { now, warn: (m) => console.error(`warning: ${m}`) });
-  console.log(JSON.stringify(out, null, 2));
-} else if (command === "preview" || command === "apply") {
+} else if (command === "preview") {
   console.error(`todo-sync ${command}: not implemented`);
   process.exit(2);
 } else {
