@@ -49,17 +49,22 @@ function tickLine(clean, date) {
  * Pure core: text + raw rows -> new text + summary.
  * @param {string} text
  * @param {unknown} rawRows parsed rows.json
- * @param {{now: Date, rng?: () => number}} opts
+ * @param {{now: Date, rng?: () => number, warn?: (msg: string) => void}} opts
  * @returns {{text: string, summary: Summary}}
  */
-export function applyTodo(text, rawRows, { now, rng = Math.random }) {
+export function applyTodo(text, rawRows, { now, rng = Math.random, warn = () => {} }) {
+  const bom = text.startsWith("\uFEFF") ? "\uFEFF" : "";
+  text = text.slice(bom.length); // the BOM stays at the start of the file, never on a moved line
   const crlf = text.indexOf("\n") > 0 && text[text.indexOf("\n") - 1] === "\r";
   const cr = crlf ? "\r" : "";
   const hadNewline = text.endsWith("\n");
-  const { lines: parsedLines, items } = parseTodo(
-    hadNewline ? text : text + (crlf ? "\r\n" : "\n"),
-  );
+  const {
+    lines: parsedLines,
+    items,
+    warnings,
+  } = parseTodo(hadNewline ? text : text + (crlf ? "\r\n" : "\n"));
   let lines = parsedLines;
+  for (const w of warnings) warn(w);
   const { rows, skipped } = validateRows(rawRows);
   /** @type {Summary} */
   const summary = { markedDone: [], archived: [], skipped: [...skipped], idsAdded: 0 };
@@ -109,7 +114,9 @@ export function applyTodo(text, rawRows, { now, rng = Math.random }) {
   for (const item of items) {
     if (item.id) continue;
     let id;
+    let attempts = 0;
     do {
+      if (++attempts > 1000) throw new Error("could not generate a unique id; nothing was written");
       id = Array.from({ length: 4 }, () => BASE36[Math.floor(rng() * 36) % 36]).join("");
     } while (used.has(id));
     used.add(id);
@@ -150,19 +157,19 @@ export function applyTodo(text, rawRows, { now, rng = Math.random }) {
 
   let out = serialize(lines);
   if (!hadNewline) out = out.replace(/\r?\n$/, "");
-  return { text: out, summary };
+  return { text: bom + out, summary };
 }
 
 /**
  * File wrapper: reads, applies, writes atomically (unless dry-run or unchanged).
  * @param {string} file
  * @param {unknown} rawRows
- * @param {{now: Date, rng?: () => number, dryRun?: boolean, beforeCommit?: () => void}} opts
+ * @param {{now: Date, rng?: () => number, dryRun?: boolean, beforeCommit?: () => void, warn?: (msg: string) => void}} opts
  * @returns {Summary}
  */
-export function applyFile(file, rawRows, { now, rng, dryRun = false, beforeCommit }) {
+export function applyFile(file, rawRows, { now, rng, dryRun = false, beforeCommit, warn }) {
   const { bytes: original, text: before } = readUtf8(file);
-  const { text, summary } = applyTodo(before, rawRows, { now, rng });
+  const { text, summary } = applyTodo(before, rawRows, { now, rng, warn });
   if (!dryRun && text !== before) writeFileAtomic(file, original, text, { beforeCommit });
   return summary;
 }

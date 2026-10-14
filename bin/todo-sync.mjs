@@ -42,7 +42,11 @@ if (command === "plan" || command === "apply") {
   try {
     const raw = JSON.parse(readFileSync(args.rows, "utf8"));
     if (command === "apply") {
-      const summary = applyFile(args.file, raw, { now, dryRun: Boolean(args["dry-run"]) });
+      const summary = applyFile(args.file, raw, {
+        now,
+        dryRun: Boolean(args["dry-run"]),
+        warn: (m) => console.error(`warning: ${m}`),
+      });
       for (const sk of summary.skipped) {
         if (sk.reason === "ambiguous id")
           console.error(`warning: id ${sk.id} is on several lines; skipped`);
@@ -51,7 +55,8 @@ if (command === "plan" || command === "apply") {
     } else {
       const { rows, skipped } = validateRows(raw, { checkTickedAt: false });
       for (const s of skipped) console.error(`warning: ignoring row ${s.id ?? "?"}: ${s.reason}`);
-      const { items } = parseTodo(readUtf8(args.file).text);
+      const { items, warnings } = parseTodo(readUtf8(args.file).text);
+      for (const w of warnings) console.error(`warning: ${w}`);
       const out = planOps(items, {
         now,
         rows,

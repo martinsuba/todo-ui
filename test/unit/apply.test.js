@@ -281,3 +281,23 @@ describe("applyFile encoding and temp file", () => {
     }
   });
 });
+
+describe("applyTodo round 2", () => {
+  it("ticking an item on a BOM first line keeps the BOM at the file start", () => {
+    const t = "﻿- [ ] A <!-- id:aaaa -->\n\n## Open\n";
+    const r = run(t, [tick("aaaa")]);
+    assert.equal(r.text, "﻿\n## Open\n\n## Done\n- [x] A (done 2026-10-14) <!-- id:aaaa -->\n");
+    assert.equal(r.text.split("﻿").length, 2);
+  });
+
+  it("throws instead of looping forever when no unique id can be drawn", () => {
+    assert.throws(() => run("- [ ] A\n- [ ] B\n", [], { rng: () => 0.5 }), /unique id/);
+  });
+
+  it("warns about an unclosed fence", () => {
+    const w = [];
+    run("- [ ] A\n```\n- [ ] B\n", [], { warn: (m) => w.push(m) });
+    assert.equal(w.length, 1);
+    assert.match(w[0], /unclosed/);
+  });
+});

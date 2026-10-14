@@ -94,7 +94,7 @@ function parseItemText(text) {
 
 /**
  * @param {string} text
- * @returns {{lines: string[], items: Item[]}}
+ * @returns {{lines: string[], items: Item[], warnings: string[]}}
  */
 export function parseTodo(text) {
   const lines = text.split("\n");
@@ -128,5 +128,8 @@ export function parseTodo(text) {
       order: items.length,
     });
   });
-  return { lines, items };
+  /** @type {string[]} */
+  const warnings = [];
+  if (fence !== null) warnings.push("unclosed code fence at end of file; later items are ignored");
+  return { lines, items, warnings };
 }
