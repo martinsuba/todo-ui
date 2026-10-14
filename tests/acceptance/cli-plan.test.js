@@ -17,7 +17,7 @@ const plan = (file, rows) =>
   runJson(["plan", "--file", file, "--rows", writeRows(file, rows), "--now", NOW]).ops;
 
 describe("REQ-008 plan: push file state to the artifact", () => {
-  it("REQ-008: a new item becomes a set op, plus set meta/sync", pending("T-001"), () => {
+  it("REQ-008: a new item becomes a set op, plus set meta/sync", {}, () => {
     const file = copyFixture("todo-open-only.md");
     const ops = plan(file, []);
     assert.deepEqual(
