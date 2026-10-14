@@ -137,6 +137,8 @@ function updateFooter() {
 
 function undoBarNode() {
   const bar = el("div", "undo-bar");
+  bar.setAttribute("role", "status");
+  bar.setAttribute("aria-live", "polite");
   for (const [id, t] of ticks) {
     if (t.timer === null) continue;
     const row = el("div", "undo-row");
@@ -144,6 +146,7 @@ function undoBarNode() {
     const btn = el("button", "undo", "Undo");
     btn.setAttribute("type", "button");
     btn.setAttribute("aria-label", `Undo: ${t.title}`);
+    btn.setAttribute("data-undo-id", id);
     btn.addEventListener("click", () => undo(id));
     row.append(btn);
     bar.append(row);
@@ -159,9 +162,29 @@ function displayRows() {
   });
 }
 
+/** Focus to restore after the next render: an Undo button by tick id, or the list. */
+let focusUndoId = /** @type {string|null} */ (null);
+
 function render() {
   if (rows === null) return;
+  const active = document.activeElement;
+  const lostUndo = Boolean(active && active.closest('[data-testid="undo-bar"]'));
   renderTodos(displayRows());
+  if (focusUndoId !== null) {
+    const btn = document.querySelector(`[data-undo-id="${CSS.escape(focusUndoId)}"]`);
+    focusUndoId = null;
+    if (btn instanceof HTMLElement) {
+      btn.focus();
+      return;
+    }
+  }
+  if (lostUndo) focusList();
+}
+
+function focusList() {
+  const target = document.querySelector('[data-testid="open-list"]') ?? appRoot;
+  target.setAttribute("tabindex", "-1");
+  /** @type {HTMLElement} */ (target).focus();
 }
 
 /** @param {string} id */
@@ -203,6 +226,7 @@ function startTick(id, title) {
   };
   entry.timer = setTimeout(() => void flush(id), UNDO_MS);
   ticks.set(id, entry);
+  focusUndoId = id;
   render();
 }
 
