@@ -34,7 +34,7 @@ Acceptance test files (planned names; test-architect may adjust and record in TE
 - Notes: trailing metadata groups only when their parts start with `due `, `done ` or `remind ` (others stay in
   title). Unknown keys → meta.
 
-### [~] T-003: Page view logic and layout  (size M)
+### [x] T-003: Page view logic and layout  (size M)
 - Goal: sorted open list, overdue/due-today marks, collapsed "Done (n)" with 7-day window, live updates, null-db
   and subscription-error message, light/dark, mobile layout (tick controls rendered; behaviour in T-004).
 - REQs: REQ-001, REQ-002, REQ-003, REQ-005 (live + null db), REQ-006
@@ -44,14 +44,15 @@ Acceptance test files (planned names; test-architect may adjust and record in TE
 - Definition of done: as T-001; follows "Artifact page contract" in ARCHITECTURE.
 - Notes: "today" = viewer's local date; tests inject a fixed clock.
 
-### [ ] T-004: Tick with undo, sync footer  (size S)
+### [~] T-004: Tick with undo, sync footer  (size S)
 - Goal: tick → done section + 4 s Undo → `update({tickedAt})`; failure rolls back with a message; "Synced X ago"
   footer from `meta/sync`.
 - REQs: REQ-004, REQ-005 (footer)
 - Acceptance tests to make pass: `page-tick.spec.js`, footer case in `page-list.spec.js`
 - Areas/files: `src/page/app.js`, `src/page/db.js`, `src/page/view.js`.
 - Definition of done: as T-001
-- Notes: one write per tick; no write from snapshot callbacks.
+- Notes: one write per tick; no write from snapshot callbacks. Several ticks in a row: each item has its own
+  independent 4 s undo window.
 
 ### [ ] T-005: `apply` — ticks into TODO.md, archive, ids  (size M)
 - Goal: implement `todo-sync apply` (and `--dry-run`) per PRD; `plan` updates existing docs without `tickedAt`,

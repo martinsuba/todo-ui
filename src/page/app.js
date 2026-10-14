@@ -1,6 +1,17 @@
-// DOM rendering (textContent only) and the db subscription. Ticks and the sync footer come in T-004.
-import { doneDate, doneWindow, dueState, localDate, sortOpen } from "./view.js";
-import { subscribeTodos } from "./db.js";
+// DOM rendering (textContent only), the db subscriptions, and tick-with-undo.
+import {
+  doneDate,
+  doneWindow,
+  dueState,
+  formatSynced,
+  isDone,
+  localDate,
+  sortOpen,
+} from "./view.js";
+import { subscribeSyncMeta, subscribeTodos, tick } from "./db.js";
+
+/** Undo window before the single write happens. */
+const UNDO_MS = 4000;
 
 const appRoot = /** @type {HTMLElement} */ (document.querySelector("main"));
 const DONE_OPEN_KEY = "todo-ui:done-open";
@@ -24,6 +35,20 @@ function saveDoneOpen(open) {
 }
 
 let doneOpen = readDoneOpen();
+
+/** @type {any[]|null} latest snapshot rows; null until the first snapshot */
+let rows = null;
+/** @type {string|null} */
+let syncedAt = null;
+/**
+ * Ticks the page owns, by todo id. Until the db snapshot shows the tick, the item counts as done.
+ * @type {Map<string, {title: string, iso: string, timer: ReturnType<typeof setTimeout>|null, written: boolean}>}
+ */
+const ticks = new Map();
+/** @type {string[]} */
+let errors = [];
+/** @type {HTMLElement|null} */
+let footerEl = null;
 
 /**
  * @param {string} tag
@@ -57,9 +82,10 @@ function openItemNode(r, today) {
   const li = el("li", "todo-item");
   li.setAttribute("data-due-state", state);
 
-  const tick = el("button", "tick");
-  tick.setAttribute("type", "button");
-  tick.setAttribute("aria-label", `Mark done: ${String(r.title ?? "")}`);
+  const tickBtn = el("button", "tick");
+  tickBtn.setAttribute("type", "button");
+  tickBtn.setAttribute("aria-label", `Mark done: ${String(r.title ?? "")}`);
+  tickBtn.addEventListener("click", () => startTick(r.id, String(r.title ?? "")));
 
   const body = el("div");
   body.className = "body";
@@ -77,7 +103,7 @@ function openItemNode(r, today) {
     body.append(" ", badge);
   }
   if (r.meta) body.append(el("div", "meta", String(r.meta)));
-  li.append(tick, body);
+  li.append(tickBtn, body);
   return li;
 }
 
@@ -102,6 +128,126 @@ function doneSectionNode(done) {
   return details;
 }
 
+function updateFooter() {
+  if (!footerEl) return;
+  const text = formatSynced(syncedAt, Date.now());
+  footerEl.hidden = text === null;
+  footerEl.textContent = text ?? "";
+}
+
+function undoBarNode() {
+  const bar = el("div", "undo-bar");
+  bar.setAttribute("role", "status");
+  bar.setAttribute("aria-live", "polite");
+  for (const [id, t] of ticks) {
+    if (t.timer === null) continue;
+    const row = el("div", "undo-row");
+    row.append(el("span", undefined, `Marked done: ${t.title}`));
+    const btn = el("button", "undo", "Undo");
+    btn.setAttribute("type", "button");
+    btn.setAttribute("aria-label", `Undo: ${t.title}`);
+    btn.setAttribute("data-undo-id", id);
+    btn.addEventListener("click", () => undo(id));
+    row.append(btn);
+    bar.append(row);
+  }
+  return bar;
+}
+
+/** Rows as displayed: pending / in-flight / just-written ticks count as done. */
+function displayRows() {
+  return (rows ?? []).map((r) => {
+    const t = ticks.get(r.id);
+    return t && !isDone(r) ? { ...r, tickedAt: t.iso } : r;
+  });
+}
+
+/** Focus to restore after the next render: an Undo button by tick id, or the list. */
+let focusUndoId = /** @type {string|null} */ (null);
+
+function render() {
+  if (rows === null) return;
+  const active = document.activeElement;
+  const lostUndo = Boolean(active && active.closest('[data-testid="undo-bar"]'));
+  renderTodos(displayRows());
+  if (focusUndoId !== null) {
+    const btn = document.querySelector(`[data-undo-id="${CSS.escape(focusUndoId)}"]`);
+    focusUndoId = null;
+    if (btn instanceof HTMLElement) {
+      btn.focus();
+      return;
+    }
+  }
+  if (lostUndo) focusList();
+}
+
+function focusList() {
+  const target = document.querySelector('[data-testid="open-list"]') ?? appRoot;
+  target.setAttribute("tabindex", "-1");
+  /** @type {HTMLElement} */ (target).focus();
+}
+
+/** @param {string} id */
+function undo(id) {
+  const t = ticks.get(id);
+  if (!t || t.timer === null) return;
+  clearTimeout(t.timer);
+  ticks.delete(id);
+  render();
+}
+
+/** @param {string} id */
+async function flush(id) {
+  const t = ticks.get(id);
+  if (!t) return;
+  t.timer = null; // in flight: no Undo any more, never written twice
+  render();
+  try {
+    await tick(id, new Date().toISOString());
+    t.written = true;
+    if (ticks.get(id) === t && !(rows ?? []).some((r) => r.id === id && !isDone(r)))
+      ticks.delete(id);
+  } catch {
+    ticks.delete(id);
+    errors = [`Could not mark "${t.title}" as done. It is back in your list; try again.`];
+  }
+  render();
+}
+
+/** @param {string} id @param {string} title */
+function startTick(id, title) {
+  if (ticks.has(id)) return;
+  errors = [];
+  const entry = {
+    title,
+    iso: new Date().toISOString(),
+    written: false,
+    timer: /** @type {ReturnType<typeof setTimeout>|null} */ (null),
+  };
+  entry.timer = setTimeout(() => void flush(id), UNDO_MS);
+  ticks.set(id, entry);
+  focusUndoId = id;
+  render();
+}
+
+/** Drop tick entries a snapshot has made obsolete. @param {any[]} snapRows */
+function reconcile(snapRows) {
+  for (const [id, t] of ticks) {
+    const r = snapRows.find((x) => x.id === id);
+    const gone = !r || isDone(r);
+    if (gone && t.timer !== null) clearTimeout(t.timer);
+    // pending: only drop when the row is gone/done elsewhere; written: drop once the snapshot shows it
+    if (gone || (t.written && r && isDone(r))) ticks.delete(id);
+  }
+}
+
+/** @param {any[]} snapRows */
+function onTodos(snapRows) {
+  reconcile(snapRows);
+  rows = snapRows;
+  render();
+}
+
 /** @param {any[]} rows */
 function renderTodos(rows) {
   const today = localDate(new Date());
@@ -119,7 +265,13 @@ function renderTodos(rows) {
     nodes.push(ul);
   }
   if (done.length > 0) nodes.push(doneSectionNode(done));
+  if (ticks.size > 0 && [...ticks.values()].some((t) => t.timer !== null))
+    nodes.push(undoBarNode());
+  for (const msg of errors) nodes.push(messageNode(msg, "alert"));
+  footerEl = el("p", "sync-footer");
+  nodes.push(footerEl);
   show(nodes);
+  updateFooter();
 }
 
 function renderUnavailable() {
@@ -137,6 +289,15 @@ function renderError() {
   ]);
 }
 
-subscribeTodos(renderTodos, renderError).then((ok) => {
+subscribeTodos(onTodos, renderError).then((ok) => {
   if (!ok) renderUnavailable();
 }, renderError);
+
+subscribeSyncMeta((at) => {
+  syncedAt = at;
+  updateFooter();
+}).catch(() => {
+  // the footer is optional: stay hidden
+});
+// keep "Synced X ago" fresh
+setInterval(updateFooter, 30000);

@@ -2,7 +2,7 @@
 // Runs against dist/todo.html (npm run build) with test/fake-claude.js injected and a fixed clock:
 // "now" is 2026-10-14 12:00 Europe/Bratislava. DOM contract: docs/TESTS.md.
 import { expect, test } from "@playwright/test";
-import { NOW, openPage, pending, seedTodos } from "../../test/page-helpers.js";
+import { NOW, openPage, seedTodos } from "../../test/page-helpers.js";
 
 const openItems = (page) => page.getByTestId("open-list").getByTestId("todo-item");
 const titles = (page) => openItems(page).getByTestId("title").allTextContents();
@@ -183,16 +183,13 @@ test.describe("REQ-005 live state, freshness, empty and error states", () => {
     await expect(openItems(page)).toHaveCount(1);
   });
 
-  pending(test, "T-004")(
-    "REQ-005: footer shows how long ago the last sync was",
-    async ({ page }) => {
-      const syncedAt = new Date(NOW.getTime() - 2 * 3600 * 1000).toISOString();
-      await openPage(page, {
-        seed: seedTodos([["aaa1", { title: "Something" }]], { "meta/sync": { syncedAt } }),
-      });
-      await expect(page.getByTestId("sync-footer")).toHaveText(/Synced 2 h ago/);
-    },
-  );
+  test("REQ-005: footer shows how long ago the last sync was", async ({ page }) => {
+    const syncedAt = new Date(NOW.getTime() - 2 * 3600 * 1000).toISOString();
+    await openPage(page, {
+      seed: seedTodos([["aaa1", { title: "Something" }]], { "meta/sync": { syncedAt } }),
+    });
+    await expect(page.getByTestId("sync-footer")).toHaveText(/Synced 2 h ago/);
+  });
 
   test("REQ-005: empty db shows the ask-HAL message", async ({ page }) => {
     await openPage(page, { seed: {} });
