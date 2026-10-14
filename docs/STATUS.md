@@ -1,9 +1,9 @@
 # Status: todo-ui
 Phase: build   <!-- planning | plan review | harness | harness review | build | deploy | paused -->
-Current task: T-004 tick with undo + sync footer — PR ready
-Open PRs: #6 T-004 (https://github.com/martinsuba/todo-ui/pull/6) — review APPROVE after 1 fix round, needs Martin's acceptance-change label
+Current task: T-005 apply — PR ready
+Open PRs: #7 T-005 (https://github.com/martinsuba/todo-ui/pull/7) — review APPROVE after 2 fix rounds (round 1 fixed 2 blocking data-loss bugs), needs Martin's acceptance-change label
 Blockers: –
-Next step: Martin labels + merges #6; then propose T-005
+Next step: Martin labels + merges #7; then propose T-006 (last M1 task), then M1 milestone review on Opus
 
 ## Decisions log
 - 2026-10-14: project created
@@ -23,3 +23,6 @@ Next step: Martin labels + merges #6; then propose T-005
 - 2026-10-14: T-003 notes: 'Nothing open. All done!' empty state added; done items with no known date always shown; same-day done items in file order
 - 2026-10-14: T-003 merged (PR #5). T-004 started; independent undo window per ticked item
 - 2026-10-14: T-004 unplanned change: scripts/build.mjs import stripping hardened (strict regex, fail on leftover import/export or unparseable bundle, unit test). Accepted edge: item deleted during in-flight tick write shows a 'could not mark' message
+- 2026-10-14: T-004 merged (PR #6). T-005 started; ticked-line format option A (keep due, add done group)
+- 2026-10-14: T-005 review found 2 blocking data-loss bugs (orphaned child lines, non-UTF-8 corruption) + duplicate ids, fences etc.; all fixed. Known limits documented in ARCHITECTURE (child block stops at blank line, UTF-8 only, ambiguous ids skipped, unclosed fence warning)
+- 2026-10-14: lesson: builder and reviewer shared one checkout; reviewer's detached checkout made the builder's push a silent no-op. From now on reviewers use a separate git worktree and builders verify the pushed SHA against origin

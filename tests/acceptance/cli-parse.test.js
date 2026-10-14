@@ -2,15 +2,7 @@
 // Cases are skipped until the named task lands; the task replaces `pending("T-00x")` with `{}` (docs/TESTS.md).
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import {
-  NOW,
-  copyFixture,
-  pending,
-  read,
-  run,
-  runJson,
-  writeRows,
-} from "../../test/cli-helpers.js";
+import { NOW, copyFixture, read, run, runJson, writeRows } from "../../test/cli-helpers.js";
 
 const ID_COMMENT = / <!-- id:[a-z0-9]{4,8} -->/g;
 
@@ -64,48 +56,40 @@ describe("REQ-007 parse and preserve TODO.md", () => {
   });
 
   for (const fixture of ["todo-ids.md", "todo-open-only.md", "todo-no-trailing-newline.md"]) {
-    it(
-      `REQ-007: parse then write with no operations is byte-identical (${fixture})`,
-      pending("T-005"),
-      () => {
-        // needs `apply`, which lands in T-005 (T-002 delivers the parser/writer used by it).
-        // Fixtures carry ids and nothing to tick or archive at NOW, so apply has nothing to change.
-        const file = copyFixture(fixture);
-        const before = read(file);
-        const rows = writeRows(file, []);
-        const r = run(["apply", "--file", file, "--rows", rows, "--now", "2026-10-14T12:00:00Z"]);
-        assert.equal(r.status, 0, r.stderr);
-        assert.equal(read(file), before);
-      },
-    );
+    it(`REQ-007: parse then write with no operations is byte-identical (${fixture})`, {}, () => {
+      // needs `apply`, which lands in T-005 (T-002 delivers the parser/writer used by it).
+      // Fixtures carry ids and nothing to tick or archive at NOW, so apply has nothing to change.
+      const file = copyFixture(fixture);
+      const before = read(file);
+      const rows = writeRows(file, []);
+      const r = run(["apply", "--file", file, "--rows", rows, "--now", "2026-10-14T12:00:00Z"]);
+      assert.equal(r.status, 0, r.stderr);
+      assert.equal(read(file), before);
+    });
   }
 
-  it(
-    "REQ-007: ids are assigned to item lines without one and nothing else changes",
-    pending("T-005"),
-    () => {
-      const file = copyFixture("todo-noids.md");
-      const before = read(file);
-      const itemLines = before.split("\n").filter((l) => /^- \[[ x]\] /.test(l)).length;
-      const rows = writeRows(file, []);
-      const summary = runJson(["apply", "--file", file, "--rows", rows, "--now", NOW]);
-      const after = read(file);
+  it("REQ-007: ids are assigned to item lines without one and nothing else changes", {}, () => {
+    const file = copyFixture("todo-noids.md");
+    const before = read(file);
+    const itemLines = before.split("\n").filter((l) => /^- \[[ x]\] /.test(l)).length;
+    const rows = writeRows(file, []);
+    const summary = runJson(["apply", "--file", file, "--rows", rows, "--now", NOW]);
+    const after = read(file);
 
-      assert.equal(summary.idsAdded, itemLines);
-      const ids = [...after.matchAll(/<!-- id:([a-z0-9]{4,8}) -->/g)].map((m) => m[1]);
-      assert.equal(ids.length, itemLines);
-      assert.equal(new Set(ids).size, ids.length, "ids are unique");
-      // every item line has exactly one id comment, no other line has one
-      for (const line of after.split("\n")) {
-        const isItem = /^- \[[ x]\] /.test(line);
-        assert.equal((line.match(/<!-- id:/g) || []).length, isItem ? 1 : 0, line);
-      }
-      // removing the added comments gives back the original bytes
-      assert.equal(after.replace(ID_COMMENT, ""), before);
-    },
-  );
+    assert.equal(summary.idsAdded, itemLines);
+    const ids = [...after.matchAll(/<!-- id:([a-z0-9]{4,8}) -->/g)].map((m) => m[1]);
+    assert.equal(ids.length, itemLines);
+    assert.equal(new Set(ids).size, ids.length, "ids are unique");
+    // every item line has exactly one id comment, no other line has one
+    for (const line of after.split("\n")) {
+      const isItem = /^- \[[ x]\] /.test(line);
+      assert.equal((line.match(/<!-- id:/g) || []).length, isItem ? 1 : 0, line);
+    }
+    // removing the added comments gives back the original bytes
+    assert.equal(after.replace(ID_COMMENT, ""), before);
+  });
 
-  it("REQ-007: a second apply does not change ids", pending("T-005"), () => {
+  it("REQ-007: a second apply does not change ids", {}, () => {
     const file = copyFixture("todo-noids.md");
     const rows = writeRows(file, []);
     runJson(["apply", "--file", file, "--rows", rows, "--now", NOW]);

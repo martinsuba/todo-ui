@@ -45,7 +45,7 @@ To run all skipped cases now (expect failures until built): `RUN_PENDING=1 npm r
   signed in, and no `open-list`.
 
 ## REQ -> tests
-Status: skipped (pending) are the CLI cases of T-005/T-006; passing are the T-001, T-002, T-003 and T-004 cases. "Un-skipped by" is the PLAN.md task whose PR enables the case.
+Status: skipped (pending) are the T-006 CLI cases; passing are the T-001 to T-005 cases. "Un-skipped by" is the PLAN.md task whose PR enables the case.
 
 | REQ | Acceptance test (file :: case) | Un-skipped by |
 |---|---|---|

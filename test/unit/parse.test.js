@@ -120,3 +120,22 @@ describe("parseTodo", () => {
     assert.equal(serialize(parseTodo(text).lines), text);
   });
 });
+
+describe("parseTodo fences", () => {
+  it("ignores items and headings inside fenced blocks", async () => {
+    const { parseTodo } = await import("../../src/sync/parse.js");
+    const { items } = parseTodo("## Open\n```\n## Done\n- [ ] x\n```\n- [ ] y\n");
+    assert.deepEqual(
+      items.map((i) => [i.title, i.section]),
+      [["y", "Open"]],
+    );
+  });
+});
+
+describe("parseTodo unclosed fence", () => {
+  it("returns a warning", async () => {
+    const { parseTodo } = await import("../../src/sync/parse.js");
+    assert.equal(parseTodo("```\n- [ ] x\n").warnings.length, 1);
+    assert.equal(parseTodo("```\n- [ ] x\n```\n").warnings.length, 0);
+  });
+});

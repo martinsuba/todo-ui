@@ -55,6 +55,15 @@ the ArtifactData tool, moving JSON between the CLI and the artifact's database. 
   path:"todos/<id>"|"meta/sync", data?}]}`.
 - `rows.json`: `[{id, ...fields}]` (the skill converts ArtifactData `list` output to this; the CLI also accepts
   `{docs:[{id,data}]}`). Exit code ≠ 0 with a message on parse errors; never writes a file it failed to parse.
+- `skipped` entries are `{id, reason}` (`id` is null when the row has none). Reasons: `not in file`, `already done`,
+  `invalid row: not an object | bad id | bad tickedAt`. `plan` ignores invalid rows with a stderr warning.
+- `apply` writes via a temp file + rename and aborts (exit 1, no write) if the file changed since it was read.
+- Known limitations: an item's block is its line plus the directly following non-blank lines starting with a space
+  or tab; ticks and archive move the whole block. A block stops at a blank line, so notes separated from their item by a
+  blank line stay where they are. `- [ ]` lines and headings inside fenced code blocks (``` or ~~~)
+  are ignored (an unclosed fence prints a warning). An id on more than one line is ambiguous: ticks for it are skipped (`ambiguous id`) and `plan` emits no
+  op for it, both with a stderr warning. Files must be valid UTF-8 (a BOM is kept); anything else exits 1 untouched.
+  A date-only `tickedAt` is taken as that local date. `plan` validates only the row id and object shape.
 - `--now` defaults to the current time; dates use the local time zone (`TZ`, Europe/Bratislava on the VPS).
 - Id generation: 4 random base36 chars, unique within the file; injectable RNG for tests.
 
