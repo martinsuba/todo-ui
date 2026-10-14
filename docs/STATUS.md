@@ -1,9 +1,9 @@
 # Status: todo-ui
 Phase: build   <!-- planning | plan review | harness | harness review | build | deploy | paused -->
-Current task: T-004 tick with undo + sync footer — PR ready
-Open PRs: #6 T-004 (https://github.com/martinsuba/todo-ui/pull/6) — review APPROVE after 1 fix round, needs Martin's acceptance-change label
+Current task: T-005 apply (ticks → TODO.md, archive, ids) — in progress (branch task/T-005-apply)
+Open PRs: –
 Blockers: –
-Next step: Martin labels + merges #6; then propose T-005
+Next step: builder implements T-005 → PR → CI → reviewer → Project Lead reads apply diff
 
 ## Decisions log
 - 2026-10-14: project created
@@ -23,3 +23,4 @@ Next step: Martin labels + merges #6; then propose T-005
 - 2026-10-14: T-003 notes: 'Nothing open. All done!' empty state added; done items with no known date always shown; same-day done items in file order
 - 2026-10-14: T-003 merged (PR #5). T-004 started; independent undo window per ticked item
 - 2026-10-14: T-004 unplanned change: scripts/build.mjs import stripping hardened (strict regex, fail on leftover import/export or unparseable bundle, unit test). Accepted edge: item deleted during in-flight tick write shows a 'could not mark' message
+- 2026-10-14: T-004 merged (PR #6). T-005 started; ticked-line format option A (keep due, add done group)

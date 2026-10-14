@@ -44,7 +44,7 @@ Acceptance test files (planned names; test-architect may adjust and record in TE
 - Definition of done: as T-001; follows "Artifact page contract" in ARCHITECTURE.
 - Notes: "today" = viewer's local date; tests inject a fixed clock.
 
-### [~] T-004: Tick with undo, sync footer  (size S)
+### [x] T-004: Tick with undo, sync footer  (size S)
 - Goal: tick → done section + 4 s Undo → `update({tickedAt})`; failure rolls back with a message; "Synced X ago"
   footer from `meta/sync`.
 - REQs: REQ-004, REQ-005 (footer)
@@ -54,7 +54,7 @@ Acceptance test files (planned names; test-architect may adjust and record in TE
 - Notes: one write per tick; no write from snapshot callbacks. Several ticks in a row: each item has its own
   independent 4 s undo window.
 
-### [ ] T-005: `apply` — ticks into TODO.md, archive, ids  (size M)
+### [~] T-005: `apply` — ticks into TODO.md, archive, ids  (size M)
 - Goal: implement `todo-sync apply` (and `--dry-run`) per PRD; `plan` updates existing docs without `tickedAt`,
   deletes docs not in Open/Done.
 - REQs: REQ-009, REQ-008 (update/delete cases)
@@ -63,7 +63,9 @@ Acceptance test files (planned names; test-architect may adjust and record in TE
 - Areas/files: `src/sync/apply.js`, `src/sync/plan.js`, `src/sync/write.js`, `bin/todo-sync.mjs`.
 - Definition of done: as T-001
 - Notes: validate rows (id format, types); unknown/invalid rows reported as skipped, never crash mid-write (write to a
-  temp file, then rename).
+  temp file, then rename); abort without writing if the file changed between read and write. Ticked line format
+  (Martin, option A): keep existing metadata, insert ` (done YYYY-MM-DD)` after the last metadata group, before
+  `→ [link]` and the id comment. Done items without a done date are never archived. Done date = local date (TZ).
 
 ### [ ] T-006: HAL skill and preview  (size S)
 - Goal: `todo-sync preview`; `hal/skills/todo-sync/SKILL.md` with the exact procedure, ArtifactData list → rows.json
