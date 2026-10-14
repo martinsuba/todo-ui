@@ -60,6 +60,7 @@ describe("parseTodo", () => {
     const by = Object.fromEntries(parseTodo(fixture("todo-edge.md")).items.map((i) => [i.id, i]));
     assert.equal(by.e001.title, "Call (mum (and dad))");
     assert.equal(by.e001.due, "2026-11-01");
+    assert.equal(by.e001.meta, "remind 09:00");
     assert.equal(by.e002.title, "Keep (due soon) as title");
     assert.equal(by.e002.due, null);
     assert.equal(by.e003.title, "Two groups");
