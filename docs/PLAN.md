@@ -23,7 +23,7 @@ Acceptance test files (planned names; test-architect may adjust and record in TE
 - Definition of done: code + unit tests, listed acceptance tests pass, CI green, review clean, docs updated if needed
 - Notes: XSS-safe rendering (textContent) from the start.
 
-### [~] T-002: Full TODO.md parser and byte-exact writer  (size M)
+### [x] T-002: Full TODO.md parser and byte-exact writer  (size M)
 - Goal: parse due/done/meta/links/sections exactly as PRD describes; write back unchanged files byte-identically;
   `plan` also emits set ops for DONE items (`status:"done"`, `doneAt`), never for archived items.
 - REQs: REQ-007, REQ-008 (done items)
@@ -34,9 +34,9 @@ Acceptance test files (planned names; test-architect may adjust and record in TE
 - Notes: trailing metadata groups only when their parts start with `due `, `done ` or `remind ` (others stay in
   title). Unknown keys → meta.
 
-### [ ] T-003: Page view logic and layout  (size M)
+### [~] T-003: Page view logic and layout  (size M)
 - Goal: sorted open list, overdue/due-today marks, collapsed "Done (n)" with 7-day window, live updates, null-db
-  message, light/dark, mobile layout.
+  and subscription-error message, light/dark, mobile layout (tick controls rendered; behaviour in T-004).
 - REQs: REQ-001, REQ-002, REQ-003, REQ-005 (live + null db), REQ-006
 - Acceptance tests to make pass: `page-list.spec.js` (except sync footer), `page-layout.spec.js`
 - Areas/files: `src/page/view.js` (+ unit tests with injected "today"), `src/page/app.js`, `styles.css`,

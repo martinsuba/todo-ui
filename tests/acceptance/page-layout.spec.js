@@ -1,6 +1,6 @@
 // REQ-006: mobile-first layout, light and dark theme.
 import { expect, test } from "@playwright/test";
-import { openPage, pending, seedTodos } from "../../test/page-helpers.js";
+import { openPage, seedTodos } from "../../test/page-helpers.js";
 
 const seed = () =>
   seedTodos([
@@ -29,7 +29,7 @@ const backgroundLuminance = (page) =>
   });
 
 test.describe("REQ-006 layout and theme", () => {
-  pending(test, "T-003")("REQ-006: at 375x812 there is no horizontal scroll", async ({ page }) => {
+  test("REQ-006: at 375x812 there is no horizontal scroll", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
     await openPage(page, { seed: seed() });
     await expect(page.getByTestId("open-list").getByTestId("todo-item")).toHaveCount(3);
@@ -40,41 +40,38 @@ test.describe("REQ-006 layout and theme", () => {
     expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
   });
 
-  pending(test, "T-003")("REQ-006: tick targets are at least 44x44 px", async ({ page }) => {
+  test("REQ-006: tick targets are at least 44x44 px", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
     await openPage(page, { seed: seed() });
     const ticks = page.getByTestId("tick");
     await expect(ticks).toHaveCount(3);
     for (const tick of await ticks.all()) {
-      const box = await tick.boundingBox();
+      const box = (await tick.boundingBox()) ?? { width: 0, height: 0 };
       expect(box.width).toBeGreaterThanOrEqual(44);
       expect(box.height).toBeGreaterThanOrEqual(44);
     }
   });
 
-  pending(test, "T-003")("REQ-006: system dark uses the dark theme", async ({ page }) => {
+  test("REQ-006: system dark uses the dark theme", async ({ page }) => {
     await page.emulateMedia({ colorScheme: "dark" });
     await openPage(page, { seed: seed() });
     await expect(page.getByTestId("todo-item").first()).toBeVisible();
     expect(await backgroundLuminance(page)).toBeLessThan(0.3);
   });
 
-  pending(test, "T-003")("REQ-006: system light uses the light theme", async ({ page }) => {
+  test("REQ-006: system light uses the light theme", async ({ page }) => {
     await page.emulateMedia({ colorScheme: "light" });
     await openPage(page, { seed: seed() });
     await expect(page.getByTestId("todo-item").first()).toBeVisible();
     expect(await backgroundLuminance(page)).toBeGreaterThan(0.7);
   });
 
-  pending(test, "T-003")(
-    "REQ-006: the body background changes between light and dark",
-    async ({ page }) => {
-      await page.emulateMedia({ colorScheme: "light" });
-      await openPage(page, { seed: seed() });
-      await expect(page.getByTestId("todo-item").first()).toBeVisible();
-      const light = await backgroundLuminance(page);
-      await page.emulateMedia({ colorScheme: "dark" });
-      expect(await backgroundLuminance(page)).not.toBe(light);
-    },
-  );
+  test("REQ-006: the body background changes between light and dark", async ({ page }) => {
+    await page.emulateMedia({ colorScheme: "light" });
+    await openPage(page, { seed: seed() });
+    await expect(page.getByTestId("todo-item").first()).toBeVisible();
+    const light = await backgroundLuminance(page);
+    await page.emulateMedia({ colorScheme: "dark" });
+    expect(await backgroundLuminance(page)).not.toBe(light);
+  });
 });
