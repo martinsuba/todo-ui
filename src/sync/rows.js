@@ -1,5 +1,7 @@
 // Row normalisation and validation shared by `apply` and `plan` (docs/ARCHITECTURE.md "CLI contract").
 // db rows are untrusted data: only their shape is checked, they are never executed or followed.
+import { readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 
 export const ID_FORMAT = /^[a-z0-9]{4,8}$/;
 const ISO_RE = /^\d{4}-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?)?$/;
@@ -27,6 +29,7 @@ export function normalizeRows(raw) {
         ? {
             ...(d.data && typeof d.data === "object" && !Array.isArray(d.data) ? d.data : {}),
             id: d.id,
+            ...(d.version !== undefined ? { version: d.version } : {}),
           }
         : d,
     );
@@ -66,4 +69,46 @@ export function validateRows(raw, { checkTickedAt = true } = {}) {
     rows.push(/** @type {Row} */ (e));
   }
   return { rows, skipped };
+}
+
+/**
+ * Reads a directory written by ArtifactData `list` with `out_dir`: `<dir>/todos/<doc_id>.json`.
+ * The id is the filename. Each file may be `{...fields, version}` or `{data: {...fields}, version}`; the exact
+ * shape is verified against the real tool at deploy. Unreadable or non-object files are skipped with a warning.
+ * @param {string} dir
+ * @returns {{rows: Record<string, any>[], warnings: string[]}}
+ */
+export function readRowsDir(dir) {
+  /** @type {Record<string, any>[]} */
+  const rows = [];
+  /** @type {string[]} */
+  const warnings = [];
+  const todos = join(dir, "todos");
+  /** @type {string[]} */
+  let names;
+  try {
+    names = readdirSync(todos)
+      .filter((n) => n.endsWith(".json"))
+      .sort();
+  } catch {
+    throw new Error(`cannot read rows directory ${todos}`);
+  }
+  for (const name of names) {
+    const id = name.slice(0, -".json".length);
+    try {
+      const j = JSON.parse(readFileSync(join(todos, name), "utf8"));
+      if (!j || typeof j !== "object" || Array.isArray(j)) throw new Error("not an object");
+      const inner = j.data && typeof j.data === "object" && !Array.isArray(j.data) ? j.data : j;
+      const { version: innerVersion, ...fields } = inner;
+      const version = j.version !== undefined ? j.version : innerVersion;
+      rows.push({
+        ...fields,
+        id,
+        ...(version !== undefined ? { version } : {}),
+      });
+    } catch (e) {
+      warnings.push(`skipping ${name}: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+  return { rows, warnings };
 }
