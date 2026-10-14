@@ -1,9 +1,9 @@
 # Status: todo-ui
-Phase: harness   <!-- planning | plan review | harness | harness review | build | deploy | paused -->
+Phase: harness review   <!-- planning | plan review | harness | harness review | build | deploy | paused -->
 Current task: –
-Open PRs: –
+Open PRs: #2 Harness: skeleton, CI, acceptance tests (https://github.com/martinsuba/todo-ui/pull/2) — ci green, reviewer approved
 Blockers: –
-Next step: run the `harness` skill (test-architect builds skeleton, CI, acceptance tests) on branch `harness`
+Next step: Martin adds label `acceptance-change` to #2 and merges; then phase build, `next-task` proposes T-001
 
 ## Decisions log
 - 2026-10-14: project created
@@ -12,3 +12,4 @@ Next step: run the `harness` skill (test-architect builds skeleton, CI, acceptan
 - 2026-10-14: stable `<!-- id -->` comments in TODO.md (D-004); done items archived to `## Archive` after 7 days
 - 2026-10-14: no tags/filters, no un-tick (4 s undo instead, D-006); stack: plain JS + Node CLI (D-005)
 - 2026-10-14: Plan v1 approved (PR #1 merged)
+- 2026-10-14: harness PR #2 opened; review round 1 fixes applied (PLAN.md test tags realigned: apply-based cli-parse cases moved T-002 → T-005)
