@@ -1,9 +1,9 @@
 # Status: todo-ui
-Phase: harness review   <!-- planning | plan review | harness | harness review | build | deploy | paused -->
-Current task: –
-Open PRs: #2 Harness: skeleton, CI, acceptance tests (https://github.com/martinsuba/todo-ui/pull/2) — ci green, reviewer approved
+Phase: build   <!-- planning | plan review | harness | harness review | build | deploy | paused -->
+Current task: T-001 thin end-to-end slice — in progress (branch task/T-001-thin-slice)
+Open PRs: –
 Blockers: –
-Next step: Martin adds label `acceptance-change` to #2 and merges; then phase build, `next-task` proposes T-001
+Next step: builder implements T-001 → PR → CI → reviewer
 
 ## Decisions log
 - 2026-10-14: project created
@@ -13,3 +13,4 @@ Next step: Martin adds label `acceptance-change` to #2 and merges; then phase bu
 - 2026-10-14: no tags/filters, no un-tick (4 s undo instead, D-006); stack: plain JS + Node CLI (D-005)
 - 2026-10-14: Plan v1 approved (PR #1 merged)
 - 2026-10-14: harness PR #2 opened; review round 1 fixes applied (PLAN.md test tags realigned: apply-based cli-parse cases moved T-002 → T-005)
+- 2026-10-14: harness PR #2 merged; build phase started with T-001
