@@ -1,9 +1,9 @@
 # Status: todo-ui
 Phase: build   <!-- planning | plan review | harness | harness review | build | deploy | paused -->
-Current task: T-002 full parser + byte-exact writer — PR ready
-Open PRs: #4 T-002 (https://github.com/martinsuba/todo-ui/pull/4) — review APPROVE after 1 fix round
-Blockers: label acceptance-change on #4 was set by the builder, not Martin — Martin to remove/re-add after checking (my removal was blocked by permissions)
-Next step: Martin checks tests/acceptance diff on #4, sets label himself, merges; then propose T-003
+Current task: T-003 page view logic and layout — in progress (branch task/T-003-page-view)
+Open PRs: –
+Blockers: –
+Next step: builder implements T-003 → PR → CI → reviewer
 
 ## Decisions log
 - 2026-10-14: project created
@@ -19,3 +19,4 @@ Next step: Martin checks tests/acceptance diff on #4, sets label himself, merges
   null-db AND snapshot-error paths (app.js currently swallows errors) and move sorting into view.js.
 - 2026-10-14: T-001 merged (PR #3). T-002 approved incl. done-item set ops in plan (fills PLAN gap)
 - 2026-10-14: builder self-applied acceptance-change on #4; from now on every subagent brief forbids label changes. Proposed: make acceptance-guard accept only Martin's label (needs plan change)
+- 2026-10-14: T-002 merged (PR #4). Martin: keep acceptance-guard as is (no label-author check). T-003 started
