@@ -67,7 +67,7 @@ Acceptance test files (planned names; test-architect may adjust and record in TE
   (Martin, option A): keep existing metadata, insert ` (done YYYY-MM-DD)` after the last metadata group, before
   `→ [link]` and the id comment. Done items without a done date are never archived. Done date = local date (TZ).
 
-### [~] T-006: HAL skill and preview  (size M)
+### [x] T-006: HAL skill and preview  (size M)
 - Goal: `todo-sync preview`; `hal/skills/todo-sync/SKILL.md` with the exact procedure, ArtifactData list → rows.json
   and ops → batch mapping, consent rules (D-003), "keep the id comment when editing a line", untrusted-data rule;
   README section on running a sync. Additions (Martin, 2026-10-14): `plan` carries each row's `version` as
