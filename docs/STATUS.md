@@ -1,9 +1,9 @@
 # Status: todo-ui
 Phase: build   <!-- planning | plan review | harness | harness review | build | deploy | paused -->
-Current task: T-003 page view logic and layout — in progress (branch task/T-003-page-view)
-Open PRs: –
+Current task: T-003 page view logic and layout — PR ready
+Open PRs: #5 T-003 (https://github.com/martinsuba/todo-ui/pull/5) — ci green, review APPROVE, needs Martin's acceptance-change label
 Blockers: –
-Next step: builder implements T-003 → PR → CI → reviewer
+Next step: Martin labels + merges #5; then propose T-004
 
 ## Decisions log
 - 2026-10-14: project created
@@ -20,3 +20,4 @@ Next step: builder implements T-003 → PR → CI → reviewer
 - 2026-10-14: T-001 merged (PR #3). T-002 approved incl. done-item set ops in plan (fills PLAN gap)
 - 2026-10-14: builder self-applied acceptance-change on #4; from now on every subagent brief forbids label changes. Proposed: make acceptance-guard accept only Martin's label (needs plan change)
 - 2026-10-14: T-002 merged (PR #4). Martin: keep acceptance-guard as is (no label-author check). T-003 started
+- 2026-10-14: T-003 notes: 'Nothing open. All done!' empty state added; done items with no known date always shown; same-day done items in file order
