@@ -1,7 +1,15 @@
 // Serialise parsed lines back to text, plus line-level edit helpers (used by apply, T-005).
 // All helpers are pure: they return a new array and never touch unrelated lines.
 
-import { readFileSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
+import {
+  chmodSync,
+  readFileSync,
+  realpathSync,
+  renameSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import { basename, dirname, join } from "node:path";
 
 const SECTION_RE = /^##\s+(.*?)\s*\r?$/;
@@ -126,7 +134,9 @@ export function writeFileAtomic(file, original, text, { beforeCommit } = {}) {
   const target = realpathSync(file);
   const tmp = join(dirname(target), `.${basename(target)}.${process.pid}.${Date.now()}.tmp`);
   try {
-    writeFileSync(tmp, text, { mode: statSync(target).mode & 0o7777 });
+    const mode = statSync(target).mode & 0o7777;
+    writeFileSync(tmp, text, { mode, flag: "wx" });
+    chmodSync(tmp, mode);
     beforeCommit?.();
     if (!readFileSync(target).equals(original)) {
       throw new Error(`${file} changed while syncing; nothing was written`);
@@ -136,4 +146,37 @@ export function writeFileAtomic(file, original, text, { beforeCommit } = {}) {
     rmSync(tmp, { force: true });
     throw e;
   }
+}
+
+/**
+ * Reads a file as strict UTF-8 (a BOM is kept as U+FEFF so it is written back unchanged).
+ * @param {string} file
+ * @returns {{bytes: Buffer, text: string}}
+ */
+export function readUtf8(file) {
+  const bytes = readFileSync(file);
+  try {
+    return {
+      bytes,
+      text: new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(bytes),
+    };
+  } catch {
+    throw new Error(`${file} is not valid UTF-8; refusing to touch it`);
+  }
+}
+
+/**
+ * Length of the block starting at item line `index`: the item line plus the directly following non-blank lines
+ * that start with a space or tab.
+ * @param {string[]} lines
+ * @param {number} index
+ */
+export function blockLength(lines, index) {
+  let n = 1;
+  while (index + n < lines.length) {
+    const l = lines[index + n];
+    if (!/^[ \t]/.test(l) || l.trim() === "") break;
+    n++;
+  }
+  return n;
 }

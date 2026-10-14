@@ -79,3 +79,18 @@ describe("planOps with db rows", () => {
     assert.ok(!("tickedAt" in (ops[1].data ?? {})));
   });
 });
+
+describe("planOps duplicate ids", () => {
+  it("emits no op for an id on several lines and warns", () => {
+    const { items } = parseTodo(
+      "- [ ] A <!-- id:aaaa -->\n- [ ] B <!-- id:aaaa -->\n- [ ] C <!-- id:cccc -->\n",
+    );
+    const warnings = [];
+    const { ops } = planOps(items, { now, rows: [{ id: "aaaa" }], warn: (m) => warnings.push(m) });
+    assert.deepEqual(
+      ops.map((o) => o.path),
+      ["todos/cccc", "meta/sync"],
+    );
+    assert.equal(warnings.length, 1);
+  });
+});

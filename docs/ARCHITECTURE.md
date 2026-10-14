@@ -58,6 +58,11 @@ the ArtifactData tool, moving JSON between the CLI and the artifact's database. 
 - `skipped` entries are `{id, reason}` (`id` is null when the row has none). Reasons: `not in file`, `already done`,
   `invalid row: not an object | bad id | bad tickedAt`. `plan` ignores invalid rows with a stderr warning.
 - `apply` writes via a temp file + rename and aborts (exit 1, no write) if the file changed since it was read.
+- Known limitations: an item's block is its line plus the directly following non-blank lines starting with a space
+  or tab; ticks and archive move the whole block. `- [ ]` lines and headings inside fenced code blocks (``` or ~~~)
+  are ignored. An id on more than one line is ambiguous: ticks for it are skipped (`ambiguous id`) and `plan` emits no
+  op for it, both with a stderr warning. Files must be valid UTF-8 (a BOM is kept); anything else exits 1 untouched.
+  A date-only `tickedAt` is taken as that local date. `plan` validates only the row id and object shape.
 - `--now` defaults to the current time; dates use the local time zone (`TZ`, Europe/Bratislava on the VPS).
 - Id generation: 4 random base36 chars, unique within the file; injectable RNG for tests.
 

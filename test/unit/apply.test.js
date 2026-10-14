@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readdirSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, it } from "node:test";
@@ -171,5 +171,113 @@ describe("applyFile", () => {
     );
     assert.equal(readFileSync(file, "utf8"), T + "- [ ] new\n");
     assert.deepEqual(readdirSync(dir), ["TODO.md"]);
+  });
+});
+
+describe("applyTodo review fixes", () => {
+  it("moves child lines with their item (tick and archive)", () => {
+    const t = [
+      "## Open",
+      "- [ ] A <!-- id:aaaa -->",
+      "  - note a",
+      "\t- tab note",
+      "- [ ] B <!-- id:bbbb -->",
+      "",
+      "## Done",
+      "- [x] Old (done 2026-09-01) <!-- id:oooo -->",
+      "  - old note",
+      "",
+    ].join("\n");
+    const r = run(t, [tick("aaaa")]);
+    assert.equal(
+      r.text,
+      [
+        "## Open",
+        "- [ ] B <!-- id:bbbb -->",
+        "",
+        "## Done",
+        "- [x] A (done 2026-10-14) <!-- id:aaaa -->",
+        "  - note a",
+        "\t- tab note",
+        "",
+        "## Archive",
+        "- [x] Old (done 2026-09-01) <!-- id:oooo -->",
+        "  - old note",
+        "",
+      ].join("\n"),
+    );
+  });
+
+  it("a block stops at a blank line", () => {
+    const r = run("- [ ] A <!-- id:aaaa -->\n  c\n\n  stray\n", [tick("aaaa")]);
+    assert.equal(r.text, "\n  stray\n\n## Done\n- [x] A (done 2026-10-14) <!-- id:aaaa -->\n  c\n");
+  });
+
+  it("skips a tick for an id on several lines", () => {
+    const t = "- [ ] A <!-- id:aaaa -->\n- [ ] B <!-- id:aaaa -->\n";
+    const r = run(t, [tick("aaaa")]);
+    assert.equal(r.text, t);
+    assert.deepEqual(r.summary.skipped, [{ id: "aaaa", reason: "ambiguous id" }]);
+  });
+
+  it("ignores items inside fenced code blocks", () => {
+    const t =
+      "## Open\n```\n- [ ] in fence\n```\n~~~\n- [ ] tilde <!-- id:aaaa -->\n~~~\n- [ ] real\n";
+    const r = run(t, [tick("aaaa")], { rng: () => 0 });
+    assert.equal(
+      r.text,
+      "## Open\n```\n- [ ] in fence\n```\n~~~\n- [ ] tilde <!-- id:aaaa -->\n~~~\n- [ ] real <!-- id:0000 -->\n",
+    );
+    assert.equal(r.summary.skipped[0].reason, "not in file");
+  });
+
+  it("date-only tickedAt is that calendar date", () => {
+    const r = run("- [ ] A <!-- id:aaaa -->\n", [tick("aaaa", "2026-10-14")]);
+    assert.match(r.text, /\(done 2026-10-14\)/);
+  });
+
+  it("an edited line keeps its own line ending in a mixed file", () => {
+    let n = 0;
+    const r = run("- [ ] A <!-- id:aaaa -->\n- [ ] B\r\n- [ ] C\n", [], {
+      rng: () => (n++ % 37) / 37,
+    });
+    assert.match(
+      r.text,
+      /^- \[ \] A <!-- id:aaaa -->\n- \[ \] B <!-- id:\w{4} -->\r\n- \[ \] C <!-- id:\w{4} -->\n$/,
+    );
+  });
+
+  it("keeps a BOM", () => {
+    const t = "\uFEFF## Open\n- [ ] A <!-- id:aaaa -->\n";
+    assert.equal(run(t).text, t);
+    assert.match(run(t, [tick("aaaa")]).text, /^\uFEFF## Open/);
+  });
+});
+
+describe("applyFile encoding and temp file", () => {
+  it("refuses a non-UTF-8 file and leaves it untouched", () => {
+    const dir = mkdtempSync(join(tmpdir(), "apply-unit-"));
+    const file = join(dir, "TODO.md");
+    const bytes = Buffer.from([0x2d, 0x20, 0x5b, 0x20, 0x5d, 0x20, 0xe9, 0x0a]);
+    writeFileSync(file, bytes);
+    assert.throws(() => applyFile(file, [], { now }), /not valid UTF-8/);
+    assert.ok(readFileSync(file).equals(bytes));
+  });
+
+  it("does not follow a pre-planted temp symlink", () => {
+    const dir = mkdtempSync(join(tmpdir(), "apply-unit-"));
+    const file = join(dir, "TODO.md");
+    writeFileSync(file, "- [ ] A <!-- id:aaaa -->\n");
+    const victim = join(dir, "victim");
+    writeFileSync(victim, "keep");
+    const orig = Date.now;
+    Date.now = () => 42;
+    try {
+      symlinkSync(victim, join(dir, `.TODO.md.${process.pid}.42.tmp`));
+      assert.throws(() => applyFile(file, [tick("aaaa")], { now }));
+      assert.equal(readFileSync(victim, "utf8"), "keep");
+    } finally {
+      Date.now = orig;
+    }
   });
 });

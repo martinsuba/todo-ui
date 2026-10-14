@@ -16,6 +16,7 @@
  */
 
 const ITEM_RE = /^- \[([ xX])\] (.*)$/;
+const FENCE_RE = /^ {0,3}(```|~~~)/;
 const SECTION_RE = /^##\s+(.*?)\s*$/;
 const ID_RE = /\s*<!--\s*id:([a-z0-9]{4,8})\s*-->\s*$/;
 const LINK_RE = /\s*→\s*\[[^\]]*\]\(([^()\s]*)\)\s*$/;
@@ -101,8 +102,17 @@ export function parseTodo(text) {
   const items = [];
   /** @type {string|null} */
   let section = null;
+  /** @type {string|null} open fence marker char ("`" or "~") */
+  let fence = null;
   lines.forEach((raw, line) => {
-    const clean = raw.replace(/\r$/, "");
+    const clean = raw.replace(/\r$/, "").replace(/^\uFEFF/, "");
+    const fm = FENCE_RE.exec(clean);
+    if (fm) {
+      if (fence === null) fence = fm[1][0];
+      else if (fm[1][0] === fence) fence = null;
+      return;
+    }
+    if (fence !== null) return;
     const sm = SECTION_RE.exec(clean);
     if (sm) {
       section = sm[1];

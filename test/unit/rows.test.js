@@ -28,3 +28,13 @@ describe("rows", () => {
     assert.equal(skipped.length, 5);
   });
 });
+
+describe("rows for plan", () => {
+  it("checkTickedAt:false keeps rows with a bad tickedAt", () => {
+    const { rows, skipped } = validateRows([{ id: "abcd", tickedAt: "nope" }], {
+      checkTickedAt: false,
+    });
+    assert.equal(rows.length, 1);
+    assert.equal(skipped.length, 0);
+  });
+});

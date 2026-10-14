@@ -36,9 +36,10 @@ export function normalizeRows(raw) {
 
 /**
  * @param {unknown} raw parsed rows.json
+ * @param {{checkTickedAt?: boolean}} [opts] `plan` passes false: tickedAt is irrelevant there
  * @returns {{rows: Row[], skipped: Skipped[]}}
  */
-export function validateRows(raw) {
+export function validateRows(raw, { checkTickedAt = true } = {}) {
   /** @type {Row[]} */
   const rows = [];
   /** @type {Skipped[]} */
@@ -53,7 +54,12 @@ export function validateRows(raw) {
       skipped.push({ id: typeof e.id === "string" ? e.id : null, reason: "invalid row: bad id" });
       continue;
     }
-    if (e.tickedAt !== undefined && e.tickedAt !== null && !isIsoDate(e.tickedAt)) {
+    if (
+      checkTickedAt &&
+      e.tickedAt !== undefined &&
+      e.tickedAt !== null &&
+      !isIsoDate(e.tickedAt)
+    ) {
       skipped.push({ id: e.id, reason: "invalid row: bad tickedAt" });
       continue;
     }

@@ -1,8 +1,7 @@
 // db rows -> file edits: ticks, archive, ids (docs/ARCHITECTURE.md "CLI contract", docs/PRD.md REQ-009).
-import { readFileSync } from "node:fs";
 import { parseTodo } from "./parse.js";
 import { validateRows } from "./rows.js";
-import { insertIntoSection, serialize, writeFileAtomic } from "./write.js";
+import { blockLength, insertIntoSection, readUtf8, serialize, writeFileAtomic } from "./write.js";
 
 const ID_RE = /\s*<!--\s*id:([a-z0-9]{4,8})\s*-->\s*$/;
 const LINK_RE = /\s*→\s*\[[^\]]*\]\([^()\s]*\)\s*$/;
@@ -76,7 +75,12 @@ export function applyTodo(text, rawRows, { now, rng = Math.random }) {
   const toDoneTop = [];
   for (const row of rows) {
     if (row.tickedAt === undefined || row.tickedAt === null) continue;
-    const item = items.find((i) => i.id === row.id);
+    const matches = items.filter((i) => i.id === row.id);
+    if (matches.length > 1) {
+      summary.skipped.push({ id: row.id, reason: "ambiguous id" });
+      continue;
+    }
+    const item = matches[0];
     if (!item) {
       summary.skipped.push({ id: row.id, reason: "not in file" });
       continue;
@@ -85,7 +89,9 @@ export function applyTodo(text, rawRows, { now, rng = Math.random }) {
       summary.skipped.push({ id: row.id, reason: "already done" });
       continue;
     }
-    const date = localDate(new Date(row.tickedAt));
+    const date = /^\d{4}-\d{2}-\d{2}$/.test(row.tickedAt)
+      ? row.tickedAt
+      : localDate(new Date(row.tickedAt));
     edits.set(item.line, tickLine(lines[item.line].replace(/\r$/, ""), date));
     toDoneTop.push(item.line);
     summary.markedDone.push({ id: row.id, title: item.title });
@@ -123,10 +129,15 @@ export function applyTodo(text, rawRows, { now, rng = Math.random }) {
 
   // apply in-place edits (indexes stay stable), then moves
   lines = lines.slice();
-  for (const [at, t] of edits) lines[at] = t + cr;
-  const doneBlock = toDoneTop.sort((a, b) => a - b).map((i) => lines[i]);
-  const archiveBlock = toArchive.map((i) => lines[i.line]);
-  const moved = new Set([...toDoneTop, ...toArchive.map((i) => i.line)]);
+  for (const [at, t] of edits) lines[at] = t + (/\r$/.test(lines[at]) ? "\r" : "");
+  /** @param {number[]} starts item line indexes */
+  const blocks = (starts) => starts.flatMap((at) => lines.slice(at, at + blockLength(lines, at)));
+  const doneBlock = blocks(toDoneTop.sort((a, b) => a - b));
+  const archiveBlock = blocks(toArchive.map((i) => i.line));
+  const moved = new Set();
+  for (const at of [...toDoneTop, ...toArchive.map((i) => i.line)]) {
+    for (let k = 0; k < blockLength(lines, at); k++) moved.add(at + k);
+  }
   if (moved.size > 0) {
     lines = lines.filter((_, i) => !moved.has(i));
     lines = insertIntoSection(lines, "Done", doneBlock, {
@@ -150,8 +161,7 @@ export function applyTodo(text, rawRows, { now, rng = Math.random }) {
  * @returns {Summary}
  */
 export function applyFile(file, rawRows, { now, rng, dryRun = false, beforeCommit }) {
-  const original = readFileSync(file);
-  const before = original.toString("utf8");
+  const { bytes: original, text: before } = readUtf8(file);
   const { text, summary } = applyTodo(before, rawRows, { now, rng });
   if (!dryRun && text !== before) writeFileAtomic(file, original, text, { beforeCommit });
   return summary;

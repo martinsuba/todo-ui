@@ -6,6 +6,7 @@ import { parseTodo } from "../src/sync/parse.js";
 import { applyFile } from "../src/sync/apply.js";
 import { planOps } from "../src/sync/plan.js";
 import { validateRows } from "../src/sync/rows.js";
+import { readUtf8 } from "../src/sync/write.js";
 
 const USAGE =
   "usage: todo-sync <preview|plan|apply> --file <TODO.md> [--rows <rows.json>] [--now <ISO>] [--dry-run]";
@@ -42,11 +43,15 @@ if (command === "plan" || command === "apply") {
     const raw = JSON.parse(readFileSync(args.rows, "utf8"));
     if (command === "apply") {
       const summary = applyFile(args.file, raw, { now, dryRun: Boolean(args["dry-run"]) });
+      for (const sk of summary.skipped) {
+        if (sk.reason === "ambiguous id")
+          console.error(`warning: id ${sk.id} is on several lines; skipped`);
+      }
       console.log(JSON.stringify(summary, null, 2));
     } else {
-      const { rows, skipped } = validateRows(raw);
+      const { rows, skipped } = validateRows(raw, { checkTickedAt: false });
       for (const s of skipped) console.error(`warning: ignoring row ${s.id ?? "?"}: ${s.reason}`);
-      const { items } = parseTodo(readFileSync(args.file, "utf8"));
+      const { items } = parseTodo(readUtf8(args.file).text);
       const out = planOps(items, {
         now,
         rows,

@@ -12,6 +12,10 @@ export function planOps(items, { now, warn = () => {}, rows = [] }) {
   const ops = [];
   const inDb = new Set(rows.map((r) => r.id));
   const inFile = new Set();
+  const warned = new Set();
+  /** @type {Map<string, number>} */
+  const count = new Map();
+  for (const i of items) if (i.id) count.set(i.id, (count.get(i.id) ?? 0) + 1);
   items.forEach((item) => {
     for (const w of item.warnings) warn(`${item.title}: ${w}`);
     if (item.section?.toLowerCase() === "archive") return;
@@ -20,6 +24,11 @@ export function planOps(items, { now, warn = () => {}, rows = [] }) {
       return;
     }
     inFile.add(item.id);
+    if ((count.get(item.id) ?? 0) > 1) {
+      if (!warned.has(item.id)) warn(`id ${item.id} appears on more than one line; no op planned`);
+      warned.add(item.id);
+      return;
+    }
     ops.push({
       op: inDb.has(item.id) ? "update" : "set",
       path: `todos/${item.id}`,
