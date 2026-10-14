@@ -3,7 +3,7 @@ Phase: build   <!-- planning | plan review | harness | harness review | build | 
 Current task: – (M1 complete: T-001…T-006 merged)
 Open PRs: chore/status-T-006 (this status update)
 Blockers: –
-Next step: milestone review of M1 on Opus (Martin's go) → deploy (DEPLOY.md), each deploy step gated by Martin
+Next step: Martin decides on M1 review finding (proposed: Plan v2 with T-007 before deploy) → deploy (DEPLOY.md)
 
 ## Decisions log
 - 2026-10-14: project created
@@ -29,3 +29,4 @@ Next step: milestone review of M1 on Opus (Martin's go) → deploy (DEPLOY.md), 
 - 2026-10-14: T-005 merged (PR #7). T-006 started incl. if_version pass-through and artifactdata batch format (ArtifactData requires if_version on writes to existing docs; batch ≤50)
 - 2026-10-14: T-006 review fixes: empty-db first sync tolerated, fresh temp dir per sync attempt. Open until deploy: real ArtifactData list shape (skill stops if rows lack `version`)
 - 2026-10-14: T-006 merged (PR #8). M1 complete; all acceptance tests run, none skipped
+- 2026-10-14: M1 milestone review (Opus). REQ-001…010 covered. Finding (should fix before deploy): a consumed page tick stays in the db (`tickedAt` is never cleared), so an item reopened in TODO.md is re-ticked by the next apply and the page keeps showing it done; every later sync also reports it as skipped "already done". Proposed fix: plan clears `tickedAt` on rows whose file item is done (needs REQ-008 wording change + acceptance case). Minor: pin TZ=Europe/Bratislava in the skill commands (VPS Node resolves Europe/Prague, same clock). Watch at deploy: list/out_dir shape, `update` null semantics, morning.sh with id comments
