@@ -15,7 +15,7 @@ import {
 const ID_COMMENT = / <!-- id:[a-z0-9]{4,8} -->/g;
 
 describe("REQ-007 parse and preserve TODO.md", () => {
-  it("REQ-007: parses title, due and meta from a real-format line", pending("T-002"), () => {
+  it("REQ-007: parses title, due and meta from a real-format line", {}, () => {
     const file = copyFixture("todo-ids.md");
     const rows = writeRows(file, []);
     const { ops } = runJson(["plan", "--file", file, "--rows", rows, "--now", NOW]);

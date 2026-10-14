@@ -1,5 +1,6 @@
 // items + db rows -> neutral ops list (docs/ARCHITECTURE.md "CLI contract").
-// T-001: only `set` ops for open items with ids plus `set meta/sync`; update/delete come in T-005.
+// T-002: `set` ops for open and done items with ids (never Archive) plus `set meta/sync`;
+// update/delete against db rows come in T-005.
 
 /**
  * @param {import("./parse.js").Item[]} items
@@ -9,8 +10,8 @@
 export function planOps(items, { now, warn = () => {} }) {
   /** @type {{op: "set"|"update"|"delete", path: string, data?: Record<string, any>}[]} */
   const ops = [];
-  items.forEach((item, order) => {
-    if (item.status !== "open") return;
+  items.forEach((item) => {
+    if (item.section?.toLowerCase() === "archive") return;
     if (!item.id) {
       warn(`skipping item without id (run apply first): ${item.title}`);
       return;
@@ -21,10 +22,10 @@ export function planOps(items, { now, warn = () => {} }) {
       data: {
         title: item.title,
         due: item.due,
-        meta: null,
-        status: "open",
-        doneAt: null,
-        order,
+        meta: item.meta,
+        status: item.status,
+        doneAt: item.doneAt,
+        order: item.order,
       },
     });
   });
