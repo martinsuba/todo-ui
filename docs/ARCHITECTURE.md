@@ -16,7 +16,7 @@ the ArtifactData tool, moving JSON between the CLI and the artifact's database. 
                                                                    │ onSnapshot (live)
                                                                    ▼
                                      dist/todo.html on claude.ai (phone/desktop)
-                                       reads todos, writes only tickedAt
+                                       reads todos, writes only tickedAt (sync clears it)
 ```
 
 ## Stack and why
@@ -76,7 +76,8 @@ the ArtifactData tool, moving JSON between the CLI and the artifact's database. 
   are ignored (an unclosed fence prints a warning). An id on more than one line is ambiguous: ticks for it are skipped (`ambiguous id`) and `plan` emits no
   op for it, both with a stderr warning. Files must be valid UTF-8 (a BOM is kept); anything else exits 1 untouched.
   A date-only `tickedAt` is taken as that local date. `plan` validates only the row id and object shape.
-- `--now` defaults to the current time; dates use the local time zone (`TZ`, Europe/Bratislava on the VPS).
+- `--now` defaults to the current time; dates use the local time zone (`TZ`). The HAL skill runs the CLI with
+  `TZ=Europe/Bratislava` so done dates and the archive cutoff never depend on the server's zone.
 - Id generation: 4 random base36 chars, unique within the file; injectable RNG for tests.
 
 ### Sync order (in the HAL skill)
@@ -92,7 +93,8 @@ TODO.md: see PRD "TODO.md format".
 Artifact db:
 - `todos/<id>`: `{title: string, due: "YYYY-MM-DD"|null, meta: string|null, status: "open"|"done",
   doneAt: "YYYY-MM-DD"|null, order: number, tickedAt?: ISO string}`. All fields but `tickedAt` are owned by the sync
-  (written with `update`/`set`); `tickedAt` is written only by the page.
+  (written with `update`/`set`); `tickedAt` is set only by the page. The sync clears it (`tickedAt: null` in the
+  update) once the item is done in the file, i.e. the tick has been consumed (D-007).
 - `meta/sync`: `{syncedAt: ISO string}`.
 - Page view of an item: done if `status == "done"` or `tickedAt` set; done date = `doneAt` or local date of
   `tickedAt`.
@@ -144,6 +146,15 @@ renames keep identity; HAL must keep the comment when editing a line (stated in 
 ### D-005: Plain JS + inline build, Node CLI (option A)
 Options: A plain JS + Node; B Preact/Vite single-file; C Python sync. · Decision: A. · Consequences: minimal tooling,
 one language; manual DOM code stays small because the UI is small.
+
+### D-007: The sync clears consumed ticks (Plan v2, 2026-10-15)
+Context: M1 milestone review found that a `tickedAt` left in the db re-ticks an item Martin reopens in TODO.md, and
+keeps it shown as done on the page. · Options: clear in `plan` when the file item is done; clear in `apply`'s output;
+keep ticks and make `apply` ignore old ones. · Decision: `plan` adds `tickedAt: null` to the update of every row
+that has a `tickedAt` while its item is done in the file. A tick made during the sync changes the row's version, so
+the batch conflicts and the sync retries; a fresh tick is never cleared unseen. · Consequences: reopening in TODO.md
+works; sync reports no longer repeat "already done" skips; `tickedAt` may be null in the db (page and CLI treat null
+as not ticked).
 
 ### D-006: Undo window instead of un-tick
 Context: no un-tick in UI, but mis-taps on mobile happen. · Decision: 4 s undo before the db write. · Consequences:

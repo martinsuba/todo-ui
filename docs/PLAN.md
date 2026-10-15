@@ -81,5 +81,21 @@ Acceptance test files (planned names; test-architect may adjust and record in TE
 - Notes: ArtifactData shapes get verified during deploy against the real artifact; the skill is adjusted then if
   needed (small fix PR).
 
+## M1 fix (Plan v2, from the M1 milestone review)
+
+### [ ] T-007: Clear consumed ticks, pin the sync time zone  (size S)
+- Goal: `plan` adds `tickedAt: null` to the update op of each row that has a `tickedAt` while its file item is done
+  (D-007); rows of open items keep their `tickedAt` untouched. HAL skill runs every CLI command with
+  `TZ=Europe/Bratislava`. Docs updated (ARCHITECTURE CLI contract, TESTS.md map).
+- REQs: REQ-008 (amended), REQ-009 (unchanged, regression)
+- Acceptance tests to make pass: new `cli-plan.test.js` cases for the two amended REQ-008 criteria (done row cleared,
+  open row kept; tick → sync → reopen → next sync keeps it open). The existing "update Y without tickedAt" case stays
+  as is (Y is open there). Needs Martin's `acceptance-change` label.
+- Areas/files: `src/sync/plan.js`, `test/unit/*`, `tests/acceptance/cli-plan.test.js`, `hal/skills/todo-sync/SKILL.md`,
+  `docs/ARCHITECTURE.md`, `docs/TESTS.md`.
+- Definition of done: as T-001
+- Notes: `validateRows` and the page already treat `tickedAt: null` as not ticked; add a unit test proving it for
+  `apply` and `view.isDone`.
+
 ## After M1: deploy (deploy skill, per docs/DEPLOY.md)
 Preview of the real TODO.md for Martin → publish artifact → install HAL skill → first sync → Martin checks on phone.

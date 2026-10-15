@@ -1,5 +1,5 @@
 # PRD: todo-ui
-Status: draft (plan PR "Plan v1") · Last update: 2026-10-14
+Status: approved v1, amended by Plan v2 · Last update: 2026-10-15
 
 ## Problem & why
 Martin's todos live in `~/HAL/ai-assistant/todo/TODO.md`, edited through HAL. On the phone there is no quick way to
@@ -123,11 +123,17 @@ Priority: must
 
 ### REQ-008: Push file state to the artifact (plan)
 `todo-sync plan` outputs the database operations that make the db match the file: update existing docs (file fields
-only, never `tickedAt`), set new docs, delete docs no longer in Open/Done, and set `meta/sync.syncedAt`.
+only), set new docs, delete docs no longer in Open/Done, and set `meta/sync.syncedAt`. `tickedAt` is never set by the
+sync; once a tick has reached the file (the item is done in TODO.md), the update clears it (`tickedAt: null`) so that
+an item later reopened in TODO.md stays open (Plan v2, D-007).
 Acceptance criteria:
 - Given a file with items X, Y and db rows for Y (with `tickedAt`) and Z, When `plan` runs, Then ops are: set X,
   update Y without a `tickedAt` field, delete Z, set `meta/sync`.
 - Given archived items in the file, When `plan` runs, Then they are not in the db ops as set/update.
+- Given a done item D in the file and its db row with `tickedAt`, When `plan` runs, Then the update for D has
+  `tickedAt: null`; an open item's row with `tickedAt` keeps it (no `tickedAt` field in its update).
+- Given an item ticked on the page, synced (apply + plan applied to the db), then reopened to `- [ ]` in TODO.md,
+  When the next sync runs, Then the item stays open in the file and is pushed as open with no `tickedAt`.
 Priority: must
 
 ### REQ-009: Pull ticks and archive (apply)
