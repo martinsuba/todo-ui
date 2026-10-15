@@ -1,9 +1,9 @@
 # Status: todo-ui
 Phase: deploy   <!-- planning | plan review | harness | harness review | build | deploy | paused -->
 Current task: deploy (first deploy 2026-10-15)
-Open PRs: fix/skill-rows-versions (skill reads versions from inline list)
+Open PRs: chore/deploy-status (this)
 Blockers: –
-Next step: Martin merges skill fix → reinstall skill in ~/HAL/.claude/skills → HAL test sync → Martin checks phone
+Next step: restart `hal` (or wait for 03:30) → Martin checks the page on his phone, ticks one item, says "sync todos" to HAL → verify → deploy done; then workflow report (ask Martin for input first)
 
 ## Decisions log
 - 2026-10-14: project created
@@ -34,3 +34,4 @@ Next step: Martin merges skill fix → reinstall skill in ~/HAL/.claude/skills �
 - 2026-10-15: Plan v2 merged (PR #10). T-007 PR #11: review APPROVE first round. Check at deploy: ArtifactData `update` with `tickedAt: null` stores null or removes the field (both handled)
 - 2026-10-15: T-007 merged (PR #11). Deploy approved. Artifact published: https://claude.ai/artifact/WY2RRe4AExNbwth86EzoN9 (private, db owner-only). First sync done by the Project Lead: 11 ids added to TODO.md (only change), 11 todos + meta/sync written
 - 2026-10-15: deploy findings: (1) `list` with `out_dir` saves data fields only, no `version` → skill now writes rows.json from the inline list result; (2) HAL runs in ~/HAL, so its skill lives in ~/HAL/.claude/skills/todo-sync (mirrored by scripts/sync.sh to ai-assistant/hal-config/claude), not ~/.claude; (3) HAL must not commit ai-assistant (Stop hook does)
+- 2026-10-15: skill fix merged (PR #12) and installed to ~/HAL/.claude/skills/todo-sync/SKILL.md
