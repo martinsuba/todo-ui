@@ -1,6 +1,6 @@
 // items + db rows -> neutral ops list (docs/ARCHITECTURE.md "CLI contract").
 // Items with ids (never Archive): `set` when there is no db row, `update` when there is one (file fields only,
-// never `tickedAt`); `delete` for db rows whose id is not in Open/Done; then `set meta/sync`.
+// except `tickedAt: null` on rows whose item is done, D-007); `delete` for db rows whose id is not in Open/Done; then `set meta/sync`.
 
 // A row's numeric `version` becomes `ifVersion` on its update/delete op; `metaVersion` on the meta/sync op.
 
@@ -44,6 +44,9 @@ export function planOps(items, { now, warn = () => {}, rows = [], metaVersion })
       return;
     }
     const exists = inDb.has(item.id);
+    const row = rows.find((r) => r.id === item.id);
+    // Tick consumed (item is done in the file): clear it so a later reopen is not re-ticked (D-007).
+    const consumed = exists && item.status === "done" && row?.tickedAt != null;
     ops.push({
       op: exists ? "update" : "set",
       path: `todos/${item.id}`,
@@ -55,6 +58,7 @@ export function planOps(items, { now, warn = () => {}, rows = [], metaVersion })
         status: item.status,
         doneAt: item.doneAt,
         order: item.order,
+        ...(consumed ? { tickedAt: null } : {}),
       },
     });
   });

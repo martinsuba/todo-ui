@@ -9,7 +9,7 @@ TODO.md (`~/HAL/ai-assistant/todo/TODO.md`) is the master. The todo page is a vi
 database `<ARTIFACT_URL>` (placeholder, set at deploy). Martin ticks items on the page; this procedure writes those
 ticks into TODO.md, archives old done items, and pushes the current file to the database.
 
-The CLI is `node ~/projects/todo-ui/bin/todo-sync.mjs`. Every attempt (the first and each retry) starts with a fresh
+The CLI is `node ~/projects/todo-ui/bin/todo-sync.mjs`; always run it with `TZ=Europe/Bratislava` as shown below. Every attempt (the first and each retry) starts with a fresh
 temp dir: `D=$(mktemp -d); mkdir -p "$D/todos"`. Never reuse a `$D` from an earlier attempt: stale files make `plan`
 emit deletes with stale versions. Remove `$D` (`rm -rf "$D"`) at the end, on success and when you stop.
 
@@ -25,7 +25,7 @@ emit deletes with stale versions. Remove `$D` (`rm -rf "$D"`) at the end, on suc
 (b) Apply ticks and archive to the file (also adds missing `<!-- id:… -->` comments):
 
 ```
-node ~/projects/todo-ui/bin/todo-sync.mjs apply --file ~/HAL/ai-assistant/todo/TODO.md --rows-dir "$D"
+TZ=Europe/Bratislava node ~/projects/todo-ui/bin/todo-sync.mjs apply --file ~/HAL/ai-assistant/todo/TODO.md --rows-dir "$D"
 ```
 
 It prints a JSON summary: `markedDone`, `archived`, `skipped` (with reasons), `idsAdded`. Warnings go to stderr.
@@ -33,7 +33,7 @@ It prints a JSON summary: `markedDone`, `archived`, `skipped` (with reasons), `i
 (c) Plan the database writes:
 
 ```
-node ~/projects/todo-ui/bin/todo-sync.mjs plan --file ~/HAL/ai-assistant/todo/TODO.md --rows-dir "$D" --format artifactdata --meta-version <n>
+TZ=Europe/Bratislava node ~/projects/todo-ui/bin/todo-sync.mjs plan --file ~/HAL/ai-assistant/todo/TODO.md --rows-dir "$D" --format artifactdata --meta-version <n>
 ```
 
 It prints `{"batches": [[{op, collection, doc_id, data?, if_version?}, ...], ...]}`. Every entry is already in the shape

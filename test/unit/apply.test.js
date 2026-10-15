@@ -65,6 +65,14 @@ describe("applyTodo ticks", () => {
     assert.deepEqual(r.summary.skipped, []);
   });
 
+  it("treats tickedAt: null as not ticked", () => {
+    const t = "- [ ] A <!-- id:aa11 -->\n";
+    const r = run(t, [{ id: "aa11", status: "open", tickedAt: null }]);
+    assert.equal(r.text, t);
+    assert.deepEqual(r.summary.markedDone, []);
+    assert.deepEqual(r.summary.skipped, []);
+  });
+
   it("accepts {docs:[{id,data}]}", () => {
     const r = run("- [ ] A <!-- id:aa11 -->\n", {
       docs: [{ id: "aa11", data: { tickedAt: "2026-10-14T10:00:00Z" } }],

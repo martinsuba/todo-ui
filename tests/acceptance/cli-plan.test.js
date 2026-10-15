@@ -1,7 +1,7 @@
 // REQ-008: `todo-sync plan` outputs the db operations that make the db match the file.
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { NOW, copyFixture, runJson, writeRows } from "../../test/cli-helpers.js";
+import { NOW, copyFixture, read, runJson, writeRows, writeText } from "../../test/cli-helpers.js";
 
 const dbRow = (id, extra = {}) => ({
   id,
@@ -97,5 +97,52 @@ describe("REQ-008 plan: push file state to the artifact", () => {
         ["set", "meta/sync"],
       ],
     );
+  });
+
+  it(
+    "REQ-008: a row with tickedAt whose item is done gets tickedAt null; an open item's row is untouched",
+    {},
+    () => {
+      const file = copyFixture("todo-tick.md"); // p7q1 is done in the file
+      const t = "2026-10-14T10:00:00Z";
+      const ops = plan(file, [dbRow("p7q1", { status: "done", tickedAt: t })]);
+      const done = ops.find((o) => o.path === "todos/p7q1");
+      assert.equal(done.op, "update");
+      assert.strictEqual(done.data.tickedAt, null);
+
+      const open = copyFixture("todo-open-only.md"); // y002 is open
+      const ops2 = plan(open, [dbRow("y002", { tickedAt: t })]);
+      assert.ok(!("tickedAt" in ops2.find((o) => o.path === "todos/y002").data));
+    },
+  );
+
+  it("REQ-008: tick, sync, reopen, next sync keeps the item open", {}, () => {
+    const file = copyFixture("todo-open-only.md");
+    const t = "2026-10-14T10:00:00Z";
+    const rowsFile = (rows) => writeRows(file, rows);
+    const applyArgs = (rows) => ["apply", "--file", file, "--rows", rowsFile(rows), "--now", NOW];
+    // 1st sync: the page tick is applied, the plan consumes it.
+    const first = runJson(applyArgs([dbRow("x001", { tickedAt: t }), dbRow("y002")]));
+    assert.deepEqual(
+      first.markedDone.map((m) => m.id),
+      ["x001"],
+    );
+    const rows1 = [dbRow("x001", { tickedAt: t }), dbRow("y002")];
+    const planned = plan(file, rows1).find((o) => o.path === "todos/x001");
+    assert.strictEqual(planned.data.tickedAt, null);
+    // db after the batch: row merged with the update data.
+    const rows2 = [{ ...rows1[0], ...planned.data }, dbRow("y002")];
+    // Martin reopens the line in TODO.md.
+    const text = read(file).replace(/- \[x\] Pay invoice \(done [^)]*\)/, "- [ ] Pay invoice");
+    assert.ok(text.includes("- [ ] Pay invoice <!-- id:x001 -->"));
+    writeText(file, text);
+    // 2nd sync: nothing is re-ticked, the plan pushes it as open.
+    const second = runJson(applyArgs(rows2));
+    assert.deepEqual(second.markedDone, []);
+    assert.deepEqual(second.skipped, []);
+    assert.equal(read(file), text);
+    const pushed = plan(file, rows2).find((o) => o.path === "todos/x001");
+    assert.equal(pushed.data.status, "open");
+    assert.ok(pushed.data.tickedAt == null);
   });
 });

@@ -65,6 +65,7 @@ test("isDone / doneDate", () => {
   assert.equal(isDone({ status: "done" }), true);
   assert.equal(isDone({ status: "open", tickedAt: "2026-10-14T10:00:00Z" }), true);
   assert.equal(isDone({ status: "open" }), false);
+  assert.equal(isDone({ status: "open", tickedAt: null }), false);
   assert.equal(doneDate({ doneAt: "2026-10-12", tickedAt: "2026-10-14T10:00:00Z" }), "2026-10-12");
   const t = new Date(2026, 9, 14, 0, 30);
   assert.equal(doneDate({ tickedAt: t.toISOString() }), "2026-10-14");

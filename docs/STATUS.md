@@ -1,9 +1,9 @@
 # Status: todo-ui
-Phase: plan review   <!-- planning | plan review | harness | harness review | build | deploy | paused -->
-Current task: – (M1 complete: T-001…T-006 merged)
-Open PRs: Plan v2 (plan/2)
+Phase: build         <!-- planning | plan review | harness | harness review | build | deploy | paused -->
+Current task: T-007 clear consumed ticks — PR ready
+Open PRs: #11 T-007 (https://github.com/martinsuba/todo-ui/pull/11) — review APPROVE, ci green; needs Martin's acceptance-change label
 Blockers: –
-Next step: Martin merges Plan v2 → T-007 (approved: "fix it and then deploy") → deploy (DEPLOY.md)
+Next step: Martin labels + merges #11 → deploy (DEPLOY.md), step 1 = preview + apply --dry-run on the real TODO.md shown to Martin
 
 ## Decisions log
 - 2026-10-14: project created
@@ -31,3 +31,4 @@ Next step: Martin merges Plan v2 → T-007 (approved: "fix it and then deploy") 
 - 2026-10-14: T-006 merged (PR #8). M1 complete; all acceptance tests run, none skipped
 - 2026-10-14: M1 milestone review (Opus). REQ-001…010 covered. Finding (should fix before deploy): a consumed page tick stays in the db (`tickedAt` is never cleared), so an item reopened in TODO.md is re-ticked by the next apply and the page keeps showing it done; every later sync also reports it as skipped "already done". Proposed fix: plan clears `tickedAt` on rows whose file item is done (needs REQ-008 wording change + acceptance case). Minor: pin TZ=Europe/Bratislava in the skill commands (VPS Node resolves Europe/Prague, same clock). Watch at deploy: list/out_dir shape, `update` null semantics, morning.sh with id comments
 - 2026-10-15: Martin: "fix it and then deploy". Plan v2: REQ-008 amended (sync clears consumed ticks, D-007), T-007 added
+- 2026-10-15: Plan v2 merged (PR #10). T-007 PR #11: review APPROVE first round. Check at deploy: ArtifactData `update` with `tickedAt: null` stores null or removes the field (both handled)

@@ -60,6 +60,8 @@ the ArtifactData tool, moving JSON between the CLI and the artifact's database. 
   `--format artifactdata` prints `{batches:[[{op, collection:"todos"|"meta", doc_id:<id>|"sync", data?, if_version?}]]}`
   — the entries of the ArtifactData `batch` action's `writes`, at most 50 per batch, each document at most once per
   batch, `meta/sync` last.
+  An `update` op carries `tickedAt: null` in its data when the row has a `tickedAt` (not null/undefined) and the
+  item is done in the file (the tick is consumed, D-007); updates of open items and `set` ops never carry `tickedAt`.
 - `--rows-dir <dir>`: a directory written by ArtifactData `list` with `out_dir`: `<dir>/todos/<doc_id>.json`, id from
   the filename, either `{...fields, version}` or `{data:{...fields}, version}`. Unreadable files are skipped with a
   warning. The exact `list` output shape is verified against the real tool at deploy (the skill is fixed then if

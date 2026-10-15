@@ -80,6 +80,8 @@ Status: all CLI cases pass (T-006 un-skipped the preview and SKILL.md cases). "U
 | REQ-008 | cli-plan.test.js :: set X, update Y (no tickedAt), delete Z, set meta/sync | T-005 |
 | REQ-008 | cli-plan.test.js :: archived items not set/updated | T-005 |
 | REQ-008 | cli-plan.test.js :: rows as `{docs:[{id,data}]}` | T-005 |
+| REQ-008 | cli-plan.test.js :: done item's row with tickedAt -> `tickedAt: null`; open item's row untouched | T-007 |
+| REQ-008 | cli-plan.test.js :: tick -> sync -> reopen -> next sync keeps it open | T-007 |
 | REQ-009 | cli-apply.test.js :: tick -> `[x] (done date)` top of Done, summary | T-005 |
 | REQ-009 | cli-apply.test.js :: old done -> Archive (created if missing) | T-005 |
 | REQ-009 | cli-apply.test.js :: already-done / unknown id skipped | T-005 |
