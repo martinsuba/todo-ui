@@ -3,7 +3,7 @@ Phase: deploy   <!-- planning | plan review | harness | harness review | build |
 Current task: deploy (first deploy 2026-10-15)
 Open PRs: chore/deploy-status (this)
 Blockers: –
-Next step: restart `hal` (or wait for 03:30) → Martin checks the page on his phone, ticks one item, says "sync todos" to HAL → verify → deploy done; then workflow report (ask Martin for input first)
+Next step: Martin restarts hal later and runs the phone + "sync todos" test (deploy verification pending); meanwhile workflow report — waiting for Martin's input
 
 ## Decisions log
 - 2026-10-14: project created
