@@ -40,13 +40,13 @@ It prints `{"batches": [[{op, collection, doc_id, data?, if_version?}, ...], ...
 of the ArtifactData `batch` action's `writes`; each batch has at most 50 entries.
 
 (d) Send each batch, in order, with the ArtifactData `batch` action: `writes` = the batch array, unchanged. Do not
-add, drop or edit entries. (The plan now also clears consumed ticks with `tickedAt: null`; nothing else changes for you.)
+add, drop or edit entries.
 
 (e) A stale `if_version` makes a batch write nothing and names the entry (a conflict). Then restart from (a) with fresh
 reads. Retry at most 2 times, each with a new `$D`; after that stop, remove `$D`, report the conflict to Martin and do not retry further.
 
 (f) Report to Martin: items marked done (from page ticks), items archived, items skipped with their reasons,
-warnings, and counts (open, done, written). "already done" skips should no longer repeat on later syncs, since consumed ticks are cleared. Then commit the TODO.md change following HAL's usual git rules for
+warnings, and counts (open, done, written). Then commit the TODO.md change following HAL's usual git rules for
 `~/HAL`.
 
 ## Rules
