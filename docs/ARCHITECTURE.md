@@ -64,10 +64,11 @@ the ArtifactData tool, moving JSON between the CLI and the artifact's database. 
   item is done in the file (the tick is consumed, D-007); updates of open items and `set` ops never carry `tickedAt`.
 - `--rows-dir <dir>`: a directory written by ArtifactData `list` with `out_dir`: `<dir>/todos/<doc_id>.json`, id from
   the filename, either `{...fields, version}` or `{data:{...fields}, version}`. Unreadable files are skipped with a
-  warning. The exact `list` output shape is verified against the real tool at deploy (the skill is fixed then if
-  needed).
-- `rows.json`: `[{id, ...fields}]` (the CLI also accepts `{docs:[{id,data}]}`); the HAL skill does not use it but
-  uses `--rows-dir`. Pages of a paginated `list` are saved into the same `$D/todos/` (unverified until deploy).
+  warning. Verified at deploy (2026-10-15): files saved by the real `list` `out_dir` hold only the data fields, no
+  `version`, so the HAL skill does not use `--rows-dir` (kept for tests and manual use).
+- `rows.json`: `[{id, ...fields}]` (the CLI also accepts `{docs:[{id,data}]}`). The HAL skill writes it from the
+  inline `list` result (one `{"id","data","version"}` line per doc), keeping only `id`, `version` and a non-null
+  `tickedAt`; a miscopied id or version makes the batch refuse all writes (safe).
   If `<dir>` exists but has no `todos/` (empty collection), the database is treated as empty with a stderr note. Exit code ≠ 0 with a message on parse errors; never writes a file it failed to parse.
 - `skipped` entries are `{id, reason}` (`id` is null when the row has none). Reasons: `not in file`, `already done`,
   `invalid row: not an object | bad id | bad tickedAt`. `plan` ignores invalid rows with a stderr warning.
@@ -83,9 +84,9 @@ the ArtifactData tool, moving JSON between the CLI and the artifact's database. 
 - Id generation: 4 random base36 chars, unique within the file; injectable RNG for tests.
 
 ### Sync order (in the HAL skill)
-1. ArtifactData `list` `todos` (with `out_dir`) + `get` `meta/sync` for its version
+1. ArtifactData `list` `todos` (inline, follow `next_cursor`) → `$D/rows.json`; `get` `meta/sync` for its version
 2. `todo-sync apply` (ticks → file, archive, ids) — must run before plan so ids exist
-3. `todo-sync plan --format artifactdata --rows-dir …` → batches
+3. `todo-sync plan --format artifactdata --rows "$D/rows.json" …` → batches
 4. ArtifactData `batch` per batch; on a version conflict restart at 1, at most 2 retries, then report and stop
 5. Report to Martin: marked done, archived, skipped, warnings, counts.
 
