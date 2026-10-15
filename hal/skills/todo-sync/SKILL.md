@@ -9,7 +9,7 @@ TODO.md (`~/HAL/ai-assistant/todo/TODO.md`) is the master. The todo page is a vi
 database `<ARTIFACT_URL>` (placeholder, set at deploy). Martin ticks items on the page; this procedure writes those
 ticks into TODO.md, archives old done items, and pushes the current file to the database.
 
-The CLI is `node ~/projects/todo-ui/bin/todo-sync.mjs`. Every attempt (the first and each retry) starts with a fresh
+The CLI is `node ~/projects/todo-ui/bin/todo-sync.mjs`; always run it with `TZ=Europe/Bratislava` as shown below. Every attempt (the first and each retry) starts with a fresh
 temp dir: `D=$(mktemp -d); mkdir -p "$D/todos"`. Never reuse a `$D` from an earlier attempt: stale files make `plan`
 emit deletes with stale versions. Remove `$D` (`rm -rf "$D"`) at the end, on success and when you stop.
 
@@ -25,7 +25,7 @@ emit deletes with stale versions. Remove `$D` (`rm -rf "$D"`) at the end, on suc
 (b) Apply ticks and archive to the file (also adds missing `<!-- id:… -->` comments):
 
 ```
-node ~/projects/todo-ui/bin/todo-sync.mjs apply --file ~/HAL/ai-assistant/todo/TODO.md --rows-dir "$D"
+TZ=Europe/Bratislava node ~/projects/todo-ui/bin/todo-sync.mjs apply --file ~/HAL/ai-assistant/todo/TODO.md --rows-dir "$D"
 ```
 
 It prints a JSON summary: `markedDone`, `archived`, `skipped` (with reasons), `idsAdded`. Warnings go to stderr.
@@ -33,20 +33,20 @@ It prints a JSON summary: `markedDone`, `archived`, `skipped` (with reasons), `i
 (c) Plan the database writes:
 
 ```
-node ~/projects/todo-ui/bin/todo-sync.mjs plan --file ~/HAL/ai-assistant/todo/TODO.md --rows-dir "$D" --format artifactdata --meta-version <n>
+TZ=Europe/Bratislava node ~/projects/todo-ui/bin/todo-sync.mjs plan --file ~/HAL/ai-assistant/todo/TODO.md --rows-dir "$D" --format artifactdata --meta-version <n>
 ```
 
 It prints `{"batches": [[{op, collection, doc_id, data?, if_version?}, ...], ...]}`. Every entry is already in the shape
 of the ArtifactData `batch` action's `writes`; each batch has at most 50 entries.
 
 (d) Send each batch, in order, with the ArtifactData `batch` action: `writes` = the batch array, unchanged. Do not
-add, drop or edit entries.
+add, drop or edit entries. (The plan now also clears consumed ticks with `tickedAt: null`; nothing else changes for you.)
 
 (e) A stale `if_version` makes a batch write nothing and names the entry (a conflict). Then restart from (a) with fresh
 reads. Retry at most 2 times, each with a new `$D`; after that stop, remove `$D`, report the conflict to Martin and do not retry further.
 
 (f) Report to Martin: items marked done (from page ticks), items archived, items skipped with their reasons,
-warnings, and counts (open, done, written). Then commit the TODO.md change following HAL's usual git rules for
+warnings, and counts (open, done, written). "already done" skips should no longer repeat on later syncs, since consumed ticks are cleared. Then commit the TODO.md change following HAL's usual git rules for
 `~/HAL`.
 
 ## Rules

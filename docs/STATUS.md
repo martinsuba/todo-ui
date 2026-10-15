@@ -1,7 +1,7 @@
 # Status: todo-ui
-Phase: plan review   <!-- planning | plan review | harness | harness review | build | deploy | paused -->
-Current task: – (M1 complete: T-001…T-006 merged)
-Open PRs: Plan v2 (plan/2)
+Phase: build         <!-- planning | plan review | harness | harness review | build | deploy | paused -->
+Current task: T-007 clear consumed ticks — in progress
+Open PRs: T-007 (task/T-007-clear-ticks)
 Blockers: –
 Next step: Martin merges Plan v2 → T-007 (approved: "fix it and then deploy") → deploy (DEPLOY.md)
 
