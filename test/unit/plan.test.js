@@ -93,4 +93,29 @@ describe("planOps duplicate ids", () => {
     );
     assert.equal(warnings.length, 1);
   });
+
+  it("clears tickedAt only on rows whose item is done (D-007)", () => {
+    const { items } = parseTodo(
+      "- [ ] A <!-- id:aaa1 -->\n- [x] B (done 2026-10-14) <!-- id:bbb2 -->\n- [x] C (done 2026-10-14) <!-- id:ccc3 -->\n- [x] D (done 2026-10-14) <!-- id:ddd4 -->\n",
+    );
+    const t = "2026-10-14T10:00:00Z";
+    const rows = [
+      { id: "aaa1", tickedAt: t },
+      { id: "bbb2", tickedAt: t },
+      { id: "ccc3", tickedAt: null },
+      { id: "ddd4" },
+    ];
+    const { ops } = planOps(items, { now, rows });
+    const data = (id) => ops.find((o) => o.path === `todos/${id}`)?.data ?? {};
+    assert.ok(!("tickedAt" in data("aaa1")));
+    assert.strictEqual(data("bbb2").tickedAt, null);
+    assert.ok(!("tickedAt" in data("ccc3")));
+    assert.ok(!("tickedAt" in data("ddd4")));
+  });
+
+  it("a done item without a db row gets set without tickedAt", () => {
+    const { items } = parseTodo("- [x] B (done 2026-10-14) <!-- id:bbb2 -->\n");
+    const { ops } = planOps(items, { now });
+    assert.ok(!("tickedAt" in (ops[0].data ?? {})));
+  });
 });
